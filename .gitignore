@@ -1,0 +1,9 @@
+# exclude all dot files except .gitignore
+AnomalyLauncher.exe
+AnomalyLauncher.exe.config
+AnomalyLauncher.pdb
+1.bat
+Settings.dat
+bin/
+gamedata/
+db/
