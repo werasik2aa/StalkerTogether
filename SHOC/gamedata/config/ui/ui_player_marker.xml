@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<w>
+	<player_marker x="0" y="0" width="8" height="5" stretch="1" alignment="c" location_level="5" la_cyclic="1" la_texture="1" la_text="0" la_alpha="1">
+	    <texture>radmp_player_markers</texture>
+		<nickname x="0" y="0" width="25" height="70" stretch="1">
+			<text align="c" vert_align="c" complex_mode="0" font="letterica16" r="225" g="225" b="225" a="255" />
+		</nickname>				
+	</player_marker>
+</w>

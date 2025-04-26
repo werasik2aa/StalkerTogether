@@ -1,0 +1,72 @@
+--[[
+[================]
+C++ Programmer & Author: Werasik2aa
+Project Creator: Monokit
+Description: Patch for client things. Like spawn quest item or block spawn some objects.
+Here patches only for client! Which not hosted game!
+[================]
+--]]
+local GameManager = SteamGameManager()
+function Patch()
+    if alife() then
+        alife().create = function (sec, pos, lv, gv, id, sta)
+            if id then
+                alife():create_local(sec, pos, lv, gv, id, sta)
+            end
+        end
+    end
+    sim_statistic.getNpcType = function(npc)
+        if not npc then return 1, 100 end
+        local cls = npc and npc:clsid()
+        if cls == clsid.script_stalker then
+            local community = npc:community()
+            local rank = ranks.get_obj_rank_name(npc)
+            return community, rank
+        else
+            local community = xr_statistic.monster_classes[cls]
+            if community == nil then
+                abort("Statistic ERROR: cannot find monstr class for clsid[%s]", get_clsid(npc))
+            end
+            local rank = ranks.get_obj_rank_name(npc)
+            return community, rank
+        end
+    end
+    function sim_statistic.simulation_statistic:add(npc)
+        --NO HOST HERE EE
+    end
+    function smart_terrain.se_smart_terrain:get_se_objs()
+    end
+    function smart_terrain.se_smart_terrain:fill_npc_info()
+        --HOST SET IT
+    end
+    function xr_gulag.gulag:update()
+    end
+    function xr_gulag.gulag:prepare_jobs()
+    end
+    function xr_gulag.gulag:setup_job_online(se_obj, job)
+    end
+    function xr_gulag.gulag:beginJob(obj_id)
+    end
+    function xr_gulag.gulag:free_obj(obj_id)
+    end
+    function xr_gulag.gulag:initialize()
+        self.ObjectJobPathName = {} --' по id. имя патрульного пути места работы персонажа
+        self.restrictors       = {} --' по id. назначенные гулагом рестрикторы для каждого персонажа
+        local ini = self.smrttrn:spawn_ini()
+        local sect = "smart_terrain"
+        if not ini:section_exist( sect ) then
+            sect = "gulag1"
+        end
+        self.state_switch_0 = xr_logic.parse_condlist( self.smrttrn, "gulag1", "switch_0", utils.cfg_get_string(ini, sect, "switch_0", self.smrttrn, false, "", "") )
+        self.state_switch_1 = xr_logic.parse_condlist( self.smrttrn, "gulag1", "switch_1", utils.cfg_get_string(ini, sect, "switch_1", self.smrttrn, false, "", "") )
+        self.JobLoaded = nil
+    end
+    function xr_gulag.gulag:object_setup_online(obj_id, obj, need_setup_logic, need_setup_restrictors)
+    end
+    gulag_tasks.loadJob = function (sj, gname, type, squad, groups, gulag)
+        --FUCK
+    end
+    gulag_tasks.loadLtx = function (name, type)
+        --FUCK
+    end
+end

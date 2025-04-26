@@ -1,0 +1,82 @@
+--[[
+[================]
+C++ Programmer & Author: Werasik2aa
+Project Creator: Monokit
+Description: Patch for host only things. Like weathers, physics and other registrator
+[================]
+--]]
+local GameManager = SteamGameManager()
+function Patch()
+    log("[Server] Patching game for server...")
+    function xr_motivator.motivator_binder:shoot_callback()
+        GameManager:OnEntityShoot(alife_object(self.object:id()))
+    end
+    level_input.flags = {}
+    level_input.action_quick_save = function (dik,bind)
+        if not (db.actor:alive() and actor_menu.is_hud_free()) then
+            return false
+        end
+        if level.present() then
+            level_input.flags.ret = false
+            SendScriptCallback("on_before_save_input", level_input.flags, 2, game.translate_string("st_ui_save"))
+            if level_input.flags.ret then
+                return true
+            end
+        end
+        local force_pause
+        if not (device():is_paused()) then
+            device():pause(true)
+            force_pause = true
+        end
+        local hours = level.get_time_hours()
+        local mins = level.get_time_minutes()
+        local aname = GameManager:GetNickName()
+        exec_console_cmd("save "..tostring(level.name()).." "..tostring(hours).."-"..tostring(mins).."_host_"..tostring(aname))
+        if (force_pause) then
+            device():pause(false)
+        end
+        return true
+    end
+    bind_physic_object.init = function(obj)
+        if (IsInvbox(obj)) then
+            obj:bind_object(bind_physic_object.generic_physics_binder(obj))
+            return
+        else
+            local sobj = alife_object(obj:id())
+            GameManager:RegisterObject(sobj)
+            if MPMain_STOGETHER.GameLoaded then
+                --GameManager:OnEntitySpawned(sobj)
+            end
+        end
+        -- bind script to object only if it has logic or if visual used for xr_box
+        local ini = obj:spawn_ini()
+        if (ini and ini:section_exist("logic")) then
+            obj:bind_object(bind_physic_object.generic_physics_binder(obj))
+        else
+            local visual = obj:get_visual_name()
+            if (visual == [[dynamics\box\box_metall_01]]) then
+                obj:bind_object(bind_physic_object.generic_physics_binder(obj))
+            elseif (visual == [[dynamics\box\box_wood_01]]) then
+                obj:bind_object(bind_physic_object.generic_physics_binder(obj))
+            elseif (visual == [[dynamics\box\box_wood_02]]) then
+                obj:bind_object(bind_physic_object.generic_physics_binder(obj))
+            end
+        end
+    end
+    function bind_car.car_binder:__init(obj) super(obj)
+        self.initialized = false
+        self.loaded = false
+        local sobj = alife_object(obj:id())
+        GameManager:RegisterObject(sobj)
+        if MPMain_STOGETHER.GameLoaded then
+            GameManager:OnEntitySpawned(sobj)
+        end
+    end
+    bind_anomaly_zone.bind = function(obj)
+        obj:bind_object(bind_anomaly_zone.anomaly_zone_binder(obj))
+        local sobj = alife_object(obj:id())
+        if MPMain_STOGETHER.GameLoaded then
+            GameManager:OnEntitySpawned(sobj)
+        end
+    end
+end

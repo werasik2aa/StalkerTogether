@@ -1,0 +1,1084 @@
+--[[
+[================]
+C++ Programmer & Author: Werasik2aa
+Project Creator: Monokit
+Description: Main game patches. Basic anomaly functions and other things.
+Used to patch anomaly 1.5.3 script files.
+[================]
+--]]
+local GameManager = SteamGameManager()
+function Patch()
+    log("[GameManager] Patching task, game scripts and other shit. For MultiPlayer actions sync")
+    function bind_stalker.actor_binder:save_state(m_data)
+        if not self.object or self.object:id() ~= 0 then
+            UnregisterScriptCallback("save_state", self)
+            return
+        end
+		--utils_data.debug_write(strformat("actor_binder:save_state BEFORE"))
+		local state = alife_storage_manager.get_game_object_state(self.object,true)
+		if not (state.actor_binder) then
+			state.actor_binder = {}
+		end
+		state.actor_binder.game_difficulty = level.get_game_difficulty()
+		state.actor_binder.disable_input_time = self.st.disable_input_time
+		state.actor_binder.simulation_started = SIMBOARD.simulation_started
+		--state.actor_binder.last_level_name = self.last_level_name
+		state.actor_binder.active_slot = self.object:active_slot()
+		state.actor_binder.last_detective_achievement_spawn_time = self.last_detective_achievement_spawn_time
+		state.actor_binder.last_mutant_hunter_achievement_spawn_time = self.last_mutant_hunter_achievement_spawn_time
+		state.actor_binder.character_icon = self.character_icon
+		if (sr_psy_antenna.psy_antenna and sr_psy_antenna.psy_antenna.global_state ~= 0 and not level_changing()) then 
+			sr_psy_antenna.psy_antenna:save_state(m_data)
+		end
+		game_statistics.save_state(m_data)
+		inventory_upgrades.save_state(m_data)
+		xr_sound.actor_save_state(state)
+		task_manager.save_state(m_data)
+		level_weathers.get_weather_manager():save_state(m_data)
+		surge_manager.save_state(m_data)
+		psi_storm_manager.save_state(m_data)
+		db.storage[self.object:id()].pstor = db.storage[self.object:id()].pstor or {}
+		--utils_data.debug_write(strformat("actor_binder:save_state AFTER"))
+	end
+    if MPMain_STOGETHER.SyncGivenItems then
+        dialogs.relocate_item_section = function(victim, section, type, amount) -- Tronex
+            if type == "in" then
+                for _ = 1, amount do
+                    alife_create_client(section, VEC_ZERO, 0, 0, AC_ID)
+                    news_manager.relocate_item(db.actor, "in", section)
+                end
+            elseif type == "out" then
+                alife_release(db.actor:object(section))
+                news_manager.relocate_item(db.actor, "out", section)
+            end
+        end
+        dialogs.relocate_item_section_to_actor = function(first_speaker, second_speaker, section, amount) -- Tronex
+            if not amount then amount = 1 end
+            for _ = 1, amount do
+                alife_create_client(section, VEC_ZERO, 0, 0, AC_ID)
+                news_manager.relocate_item(db.actor, "in", section)
+            end
+        end
+    end
+    dialogs_mlr.spawn_1_11_af_medusa_kmb = function (first_speaker, second_speaker)
+		alife_create_client("af_medusa", vector():set(-249.45230102539,-13.491371154785,-29.858497619629), 12990, 386)
+	end
+	dialogs_mlr.give_task_fanat_training_2 = function ()
+		task_manager.get_task_manager():give_task("task_fanat_training_2")
+		-- Spawn Crystal artefact in Fanatic's stash
+		local sim = alife()
+		local box_id = AC_ID
+		for i=1,65534 do
+			local se_obj = sim:object(i)
+			if se_obj and (se_obj:name() == "secret_fanat") then
+				box_id = i
+				break
+			end
+		end
+		alife_create_client("af_ball", VEC_ZERO, 0, 0, box_id)
+	end
+    xr_effects.spawn_item_at_pos = function(actor, npc, p)
+        if not (p and p[1]) then return end
+        local pos_itms = {
+            ["drx_x8_documents"] = {-101.9361038208, -31.361772537231, 90.615669250488, 636, 5090},
+            ["drx_x16_documents"] = {-46.306594848633, 20.461000442505, 2.1229863166809, 2220, 3792},
+            ["drx_x18_documents"] = {23.617618560791, -5.6467723846436, -18.183609008789, 6311, 3760},
+            ["drx_x19_documents"] = {6.817852973938, -7.8305835723877, -15.558134078979, 7638, 3842},
+            ["drx_agr_u_documents"] = {46.072761535645, 1.8872995376587, 75.970985412598, 3968, 3630},
+            ["drx_jup_u_documents"] = {27.983295440674, 12.515381813049, -1.1357840299606, 39736, 4861},
+            
+            ["lx8_history_documents"] = {-93.635635375977, -27.296674728394, 96.18310546875, 1318, 5079},
+            ["lx8_history_2_documents"] = {-116.10192871094, -27.196212768555, 82.614562988281, 30, 5090},
+            ["lx8_history_3_documents"] = {-43.184757232666, -19.527189254761, 67.334884643555, 6770, 5094},
+            
+            ["wpn_gauss_quest"] = {-426.44213867188, 26.069364547729, -383.1135559082, 138111, 4140},
+        }
+        if (pos_itms[p[1]]) then
+            local pos = vector():set( pos_itms[p[1]][1], pos_itms[p[1]][2], pos_itms[p[1]][3] )
+            alife_create_client(p[1], pos, pos_itms[p[1]][4], pos_itms[p[1]][5] )
+        else
+            printe("!ERROR: spawn_item_at_pos | no info found for item [%s]", p[1])
+        end
+    end
+    xr_effects.spawn_strelok_notes = function()
+        local pos = vector():set( 43.601459503174, 1.3544018268585, 75.227851867676 )
+        alife_create_client("strelok_notes", pos, 3762, 3630 )
+    end
+    xr_effects.spawn_wpn_gauss_quest = function() -- not used
+        -- Potential locations for quest item:
+        local quest_item_locations_list = {
+            {-421.80874633789, 23.745666503906, -328.25729370117, 145096, 4394}, -- location data for location 1
+            {-411.07214355469, 32.196994781494, -334.24200439453, 161488, 4139}, -- location data for location 2
+            {-424.48648071289, 24.198583602905, -381.48046875, 142021, 4140},  -- location data for location 3
+        }
+        -- Choose random location from the list:
+        local i = math.random( #quest_item_locations_list )
+        -- Set the position vector with the x, y, and z coordinates:
+        local pos = vector():set( quest_item_locations_list[i][1], quest_item_locations_list[i][2], quest_item_locations_list[i][3] )
+        -- Extract the level vertex id for the chosen location:
+        local lvid = quest_item_locations_list[i][4]
+        -- Extract the game vertex id:
+        local gvid = quest_item_locations_list[i][5]
+        -- Spawn the item at the chosen location:
+        alife_create_client("wpn_gauss_quest", pos, lvid, gvid)
+    end
+    xr_effects.spawn_x8_documents = function()
+        -- Potential locations for quest item:
+        local quest_item_locations_list = {
+            {-79.236862182617, -24.324705123901, 89.061508178711, 3417, 5077}, -- location data for location 1
+            {-101.86143493652, -31.362953186035, 90.774269104004, 636, 5090}, -- location data for location 2
+            {-79.810501098633, -15.038819313049, 114.17692565918, 3459, 5098},  -- location data for location 3
+        }
+        -- Choose random location from the list:
+        local i = math.random( #quest_item_locations_list )
+        -- Set the position vector with the x, y, and z coordinates:
+        local pos = vector():set( quest_item_locations_list[i][1], quest_item_locations_list[i][2], quest_item_locations_list[i][3] )
+        -- Extract the level vertex id for the chosen location:
+        local lvid = quest_item_locations_list[i][4]
+        -- Extract the game vertex id:
+        local gvid = quest_item_locations_list[i][5]
+        -- Spawn the item at the chosen location:
+        alife_create_client("x8_documents", pos, lvid, gvid )
+    end
+    xr_effects.spawn_monolith_shard = function()
+        local pos = vector():set( 0.072339810431004, -34.356998443604, 17.800102233887 )
+        alife_create_client("monolith_shard", pos, 1849, 4055 )
+    end
+    xr_effects.spawn_stitch_decoder = function()
+        -- Potential locations for quest item:
+        local quest_item_locations_list = {
+            {50.247924804688, 3.9755771160126, 156.77543640137, 509188, 5248}, -- location data for location 1
+            {51.563461303711, 7.1993789672852, 224.42543029785, 514950, 5155}, -- location data for location 2
+            {19.012723922729, 1.1766533851624, 112.65353393555, 472104, 5144},  -- location data for location 3
+        }
+        -- Choose random location from the list:
+        local i = math.random( #quest_item_locations_list )
+        -- Set the position vector with the x, y, and z coordinates:
+        local pos = vector():set( quest_item_locations_list[i][1], quest_item_locations_list[i][2], quest_item_locations_list[i][3] )
+        -- Extract the level vertex id for the chosen location:
+        local lvid = quest_item_locations_list[i][4]
+        -- Extract the game vertex id:
+        local gvid = quest_item_locations_list[i][5]
+        -- Spawn the item at the chosen location:
+        alife_create_awaite(function (se_obj)
+            if se_obj then
+                item_radio.add_target(se_obj.id, 171, 75)
+            end
+        end, "stitch_decoder", pos, lvid, gvid)
+    end
+    xr_effects.spawn_contact_lost_pda = function()
+        -- Potential locations for quest item:
+        local quest_item_locations_list = {
+            {-35.871238708496, -4.0057287216187, 139.02619934082, 8109, 2458}, -- location data for location 1
+            {-18.989786148071, -3.9511435031891, 143.22698974609, 15620, 2477}, -- location data for location 2
+            {-24.930610656738, -4.015763759613, 139.54330444336, 12734, 2458},  -- location data for location 3
+        }
+        -- Choose random location from the list:
+        local i = math.random( #quest_item_locations_list )
+        -- Set the position vector with the x, y, and z coordinates:
+        local pos = vector():set( quest_item_locations_list[i][1], quest_item_locations_list[i][2], quest_item_locations_list[i][3] )
+        -- Extract the level vertex id for the chosen location:
+        local lvid = quest_item_locations_list[i][4]
+        -- Extract the game vertex id:
+        local gvid = quest_item_locations_list[i][5]
+        -- Spawn the item at the chosen location:
+        local se_obj = alife_create_client("contact_lost_pda", pos, lvid, gvid )
+        if not se_obj then
+            printe("!ERROR: unable to spawn contact_lost_pda" )
+        end
+    end
+    xr_effects.spawn_jupiter_documents = function()
+        -- Potential locations for quest item:
+        local quest_item_locations_list = {
+            {304.7744140625, 28.783397674561, -299.32592773438, 1209997, 4517}, -- location data for location 1
+            {324.68350219727, 31.384368896484, -305.80865478516, 1235548, 4517}, -- location data for location 2
+            {351.95175170898, 27.543346405029, -343.99871826172, 1276714, 4516},  -- location data for location 3
+        }
+        -- Choose random location from the list:
+        local i = math.random( #quest_item_locations_list )
+        -- Set the position vector with the x, y, and z coordinates:
+        local pos = vector( ):set( quest_item_locations_list[i][1], quest_item_locations_list[i][2], quest_item_locations_list[i][3] )
+        -- Extract the level vertex id for the chosen location:
+        local lvid = quest_item_locations_list[i][4]
+        -- Extract the game vertex id:
+        local gvid = quest_item_locations_list[i][5]
+        -- Spawn the item at the chosen location:
+        local se_obj = alife_create_client("jupiter_documents", pos, lvid, gvid )
+        if ( not se_obj ) then
+            printe("!ERROR: unable to spawn jupiter_documents" )
+        end
+    end
+    xr_effects.jup_b219_restore_gate = function()
+        local yaw = 0
+        local spawn_sect = "jup_b219_gate"
+        local obj = get_story_object("jup_b219_gate_id")
+        if obj then
+            local se_obj = alife_create_client(spawn_sect, vector():set(obj:position()), obj:level_vertex_id(), obj:game_vertex_id())
+            if (se_obj) then
+                se_obj:set_yaw(yaw * math.pi / 180)
+            end
+        end
+    end
+    xr_effects.spawn_corpse = function(actor, obj, p)
+            --' p[1] - секция кого спаунить
+            --' p[2] - имя патрульного пути где спаунить.
+        local spawn_sect = p[1]
+        if spawn_sect == nil then
+            printf("Wrong spawn section for 'spawn_corpse' function %s. For object %s", tostring(spawn_sect), obj:name())
+        end
+
+        local path_name = p[2]
+        if path_name == nil then
+            printf("Wrong path_name for 'spawn_corpse' function %s. For object %s", tostring(path_name), obj:name())
+        end
+
+        if not level.patrol_path_exists(path_name) then
+            printf("Path %s doesnt exist. Function 'spawn_corpse' for object %s ", tostring(path_name), obj:name())
+        end
+        local ptr = patrol(path_name)
+        local index = p[3] or 0
+
+        alife_create_awaite(function (se_obj)
+            if se_obj then
+                se_obj:kill()
+            end
+        end, spawn_sect, ptr:point(index), ptr:level_vertex_id(0), ptr:game_vertex_id(0))
+    end
+    xr_conditions.task_giver_alive = function (actor,npc,p)
+        if not (p[1]) then
+            return false
+        end
+        local tm = task_manager.get_task_manager()
+        local tsk = tm.task_info[p[1]]
+        if not tsk then return true end
+        local se_obj = tsk.task_giver_id and alife_object(tsk.task_giver_id)
+        if not se_obj then return false end
+        local cls = se_obj:clsid()
+        if IsSquad(nil, cls) then return true end -- if squad exist then atleast 1 npc should be alive
+        return (IsMonster(nil, cls) or IsStalker(nil, cls)) and se_obj:alive()
+    end
+    bind_stalker_ext.actor_on_before_death = function(binder,whoID)
+        if MPMain_STOGETHER.IDead then return end
+        local flags = { ret_value = true }
+        SendScriptCallback("actor_on_before_death", whoID, flags)
+        if not flags.ret_value then
+            return
+        end
+        MPMain_STOGETHER.IDead = true
+        GameManager:OnICustomAnimation("waunded_1_idle_0", "", true, 340000)
+        if MPMain_STOGETHER.DropInvOnDeath then
+            log("[MLEVELM] Dropping actor inventory. We dead")
+            alife_create_awaite(function (se_obj)
+                if se_obj then
+                    local m_data = alife_storage_manager.get_state()
+                    if not m_data.player_created_stashes then m_data.player_created_stashes = {} end
+                    m_data.player_created_stashes[se_obj.id] = "itm_backpack"
+                    level.map_add_object_spot_ser(se_obj.id, "treasure", "MYLOOT")
+                    local function drop_items(boxid)
+                        local obj = level.object_by_id(boxid)
+                        if obj then
+                            local function itr_inv(_, item)
+                                db.actor:transfer_item(item, obj)
+                                SendScriptCallback("actor_on_item_put_in_box", obj, item)
+                            end
+                            db.actor:iterate_ruck(itr_inv, nil)
+                            return true
+                        end
+                        return false
+                    end
+                    CreateTimeEvent(0,"actor_backpack", 0, drop_items, se_obj.id)
+                end
+            end, "inv_backpack", db.actor:position(), db.actor:level_vertex_id(), db.actor:game_vertex_id())
+        end
+        if MPMain_STOGETHER.ClearInvOnDeath then
+            log("[MLEVELM] Clearing actor inventory. We dead")
+            local function itr_inv(_, item)
+                alife_release_full(item)
+            end
+            db.actor:iterate_ruck(itr_inv, nil)
+        end
+    end
+    tasks_recover_item_on_corpse.spawn_on_id_position = function(section, target_id)
+        if not section then printf('spawn_on_id_position called without section') return end
+        local se = alife_object(target_id)
+        return se and alife_create(section, se, false)
+    end
+    tasks_recover_item_on_corpse.spawn_on_id = function(section, target_id)
+        local se = alife_object(target_id)
+        return se and alife_create_item(section, se)
+    end
+    bind_campfire.campfire_go_off = function(cf, obj)
+        local cf = cf or get_nearby_campfire(dist_cf,true)
+        if cf and (cf:is_on()) then
+            actor_effects.play_item_fx("matches_script")
+            cf:turn_off()
+            GameManager:OnIInteract(alife_object(obj:id()), 22)
+        end
+    end
+    bind_campfire.campfire_go_on = function(obj, cf)
+        local dist_cf = 2
+        local cf = cf or bind_campfire.get_nearby_campfire(dist_cf, true)
+        if (not cf) then
+            return
+        end
+        if (cf:is_on()) then
+            return
+        end
+        if bind_campfire.rain_pass() then
+            actor_effects.play_item_fx("matches_script")
+            xr_sound.set_sound_play(AC_ID,"inv_matches")
+            cf:turn_on()
+            GameManager:OnIInteract(alife_object(obj:id()), 2)
+        else
+            actor_effects.play_item_fx("matches_script")
+            actor_menu.set_msg(1, game.translate_string("st_fail"),3)
+        end
+    end
+    bind_campfire.actor_on_item_use = function(obj, cfo, cf)
+        local sec = obj:section()
+        if (sec == "matches") or (sec == "box_matches") then
+            bind_campfire.campfire_go_on(cfo, cf)
+            utils_item.discharge(obj)
+        end
+    end
+    bind_campfire.use_campfire = function(actor,zone,p) -- called from game_tutorials.xml
+        local pos = db.actor:position()
+        for id, binder in pairs(bind_campfire.campfires_all) do
+            if (binder and binder.campfire) then
+                if (pos:distance_to_sqr(binder.object:position()) <= 2) then
+                    if (binder.campfire:is_on()) then 
+                        bind_campfire.campfire_go_off(binder.campfire, binder.object)
+                    else
+                        local obj_item = db.actor:object("matches") or db.actor:object("box_matches")
+                        if obj_item then
+                            bind_campfire.actor_on_item_use(obj_item, binder.object, binder.campfire)
+                        else
+                            actor_menu.set_msg(1, game.translate_string("st_ui_campfire_prereq"),3)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    itms_manager.use_guitar = function(obj)
+        local n = math.random(28)
+        local snd = sound_object("music\\guitar_" .. tostring(n))
+        if (not snd) then return end
+        local period = snd:length()
+        snd:play_no_feedback(db.actor, 0, 0, db.actor:position(), 1.0, 1.0)
+        actor_effects.play_continuous_effect(period)
+        GameManager:OnICustomAnimation("guitar_0", obj:section(), true, period/1000, "music\\guitar_" .. tostring(n))
+    end
+    itms_manager.use_harmonica = function(obj)
+        local n = math.random(5)
+        local snd = sound_object("music\\harmonica_" .. tostring(n))
+        if (not snd) then return end
+        local period = snd:length()
+        snd:play_no_feedback(db.actor, 0, 0, db.actor:position(), 1.0, 1.0)
+        actor_effects.play_continuous_effect(period)
+        GameManager:OnICustomAnimation("harmonica_0", obj:section(), true, period/1000, "music\\harmonica_" .. tostring(n))
+    end
+    function task_manager.CRandomTask:give_task(task_id, task_giver_id)
+        local dryfear = self.task_info[task_id]
+        self:give_task_client(task_id, task_giver_id)
+        -- SEND NEW ACHIVED TASK IF IT WAS NEW
+        if dryfear then return end
+        local tma = self.task_info[task_id]
+        GameManager:OnIGetTask(tma.t, tma.current_title or "", tma.current_descr or "", tma.task_giver_id or 65535, tma.stage, true)
+        return true
+    end
+    function task_manager.CRandomTask:give_task_client(task_id,task_giver_id)
+        printf("CRandomTask:give_task() task_id[%s]", tostring(task_id))
+        printf("giver_id %s", tostring(task_giver_id))
+
+        if not task_manager.task_ini:section_exist(task_id) then
+            printe("!ERROR There is no task [%s] in task ini_file or ini_file is not included!!!", task_id)
+            return
+        end
+        if (self.task_info[task_id]) then
+            printf("task_manager: ERROR: TASK ALREADY EXISTS!!!")
+            MPMain_STOGETHER.PerformRespawnTaskObjects(self.task_info[task_id])
+            return
+        end
+
+        if USE_MARSHAL then
+            local m_data = alife_storage_manager.get_state()
+            if (m_data.task_objects and m_data.task_objects[task_id]) then
+                printf("task_manager: WARNING: task data already existed for %s",task_id)
+                m_data.task_objects[task_id] = nil
+            end
+        end
+
+        self.task_info[task_id] = task_objects.CGeneralTask(task_id)
+        self.task_info[task_id]:give_task()
+        self.task_info[task_id].task_giver_id = task_giver_id
+        MPMain_STOGETHER.PerformRespawnTaskObjects(self.task_info[task_id])
+    end
+    function task_manager.CRandomTask:set_task_completed(task_id)
+        if self.task_info[task_id] then
+            self.task_info[task_id].forced_status = "complete"
+            GameManager:OnForcedTaskState(task_id, "complete")
+        end
+    end
+    function task_manager.CRandomTask:task_complete(p1)
+        if (db.actor == nil or device().precache_frame > 1) then
+            return false
+        end
+        local tsk = self.task_info[p1]
+        if tsk == nil then
+            printe("!ERROR: CRandomTask:task_complete %s task is nil!",p1)
+            return true
+        end
+        if (tsk.forced_status == "complete") then
+            tsk.forced_status = nil
+            tsk.last_check_task = "complete"
+        elseif (tsk.forced_status == "fail") then
+            return false
+        end
+        if tsk.last_check_task == "complete" then
+            GameManager:OnForcedTaskState(p1, "complete")
+            return true
+        end
+        return false
+    end
+    function task_manager.CRandomTask:set_task_failed(task_id, force)
+        if self.task_info[task_id] and IIsHost() or force then
+            self.task_info[task_id].forced_status = "fail"
+            GameManager:OnForcedTaskState(task_id, "fail")
+        end
+    end
+    function task_manager.CRandomTask:set_task_cancelled(task_id)
+        if self.task_info[task_id] then
+            self.task_info[task_id].forced_status = "fail"
+            self.task_info[task_id].cancelled_by_actor = true
+            GameManager:OnForcedTaskState(task_id, "fail")
+        end
+    end
+    function task_objects.CGeneralTask:check_task(tm)
+        local tg = time_global()
+        if (self.check_time and self.last_check_task == nil and tg < self.check_time) then
+            return
+        end
+        if (not db.actor) then
+            return
+        end
+        self.t = self.t or db.actor and db.actor:get_task(self.id,true)
+        if (self.t == nil) then
+            return
+        end
+        self.check_time = tg + math.random(500,1000)
+        local task_updated = false
+        local t_tile = task_functor[self.title_functor](self.id, "title", self.title, self)
+        if self.current_title ~= t_tile then
+            task_updated = true
+            self.current_title = t_tile
+            self.t:set_title(game.translate_string(t_tile))
+        end
+        local t_descr = task_functor[self.descr_functor](self.id, "descr", self.descr, self)
+        if self.current_descr ~= t_descr then
+            task_updated = true
+            self.current_descr = t_descr
+            self.t:set_description(game.translate_string(t_descr))
+        end
+        local t_target = task_functor[self.target_functor](self.id, "target", self.target, self)
+        if not IIsHost() and self.current_target and self.current_target < 65535 then
+            t_target = self.current_target
+        end
+        self:check_level(t_target)
+        if self.current_target ~= t_target then
+            task_updated = true
+            if not t_target then
+                self.t:remove_map_locations(false)
+            else
+                self.t:change_map_location(self.spot, t_target)
+                if(self.storyline) then
+                    level.map_add_object_spot(t_target, "ui_storyline_task_blink", "")
+                else
+                    level.map_add_object_spot(t_target, "ui_secondary_task_blink", "")
+                end
+            end
+            self.current_target = t_target
+        end
+        if task_updated then
+            if not self.dont_send_update_news then
+                news_manager.send_task(db.actor, "updated", self.t)
+            end
+            if not self.prev_status or not self.prev_stage or self.prev_stage ~= self.stage or self.prev_status ~= self.status then
+                if MPMain_STOGETHER.GameLoaded then
+                    GameManager:OnIGetTask(self.t, self.current_title or "", self.current_descr or "", self.task_giver_id or 65535, self.stage, false)
+                end
+                self.prev_status = self.status
+                self.prev_stage = self.stage
+            end
+        end
+        for k,v in pairs(self.condlist) do
+            local t = xr_logic.pick_section_from_condlist(db.actor, db.actor, v)
+            if (t) and (t == "complete" or t == "fail" or t == "reversed") then
+                self.last_check_task = t
+                return
+            end
+        end
+        -- status functor
+        if (self.status_functor and task_status_functor[self.status_functor]) then
+            local t = task_status_functor[self.status_functor](self,self.id)
+            if (t) and (t == "complete" or t == "fail" or t == "reversed") then
+                self.last_check_task = t
+            end
+        end
+    end
+    function ph_button.ph_button:__init(obj, storage)
+        self.object = obj
+        self.st = storage
+        storage.button_action = self
+    end
+    function ph_button.ph_button:use_callback(victim, who)
+        if not self.object then return end
+        GameManager:OnICustomAnimation("knopka_0", "", true, 1.7)
+        GameManager:OnIInteract(alife_object(self.object:id()), 1)
+        if self:try_switch() then
+            return
+        end
+    end
+    function ph_door.action_door:use_callback(door, actor)
+        if self.st.locked then
+            if self.st.snd_open_start then
+                xr_sound.set_sound_play(self.object:id(), self.st.snd_open_start)
+            end
+        end
+        self:try_switch()
+        if not self.object then return end
+        if self.st.closed then
+            GameManager:OnIInteract(alife_object(self.object:id()), 0)
+        else
+            GameManager:OnIInteract(alife_object(self.object:id()), 10)
+        end
+    end
+    function ui_debug_launcher.UIDebug_ObjSpawn:Spawn(section)
+		-- Get group name
+        local obj_to_spawn_classes = {
+            -- kind
+            ["AI_STL_S"]    = "NPC (Stalker)",
+            ["AI_TRD_S"]    = "NPC (Stalker)",
+    
+            ["SM_KAR"]	    = "NPC (Mutant)",
+            ["SM_BLOOD"]    = "NPC (Mutant)",
+            ["SM_BOARW"]    = "NPC (Mutant)",
+            ["SM_BURER"]    = "NPC (Mutant)",
+            ["SM_CAT_S"]    = "NPC (Mutant)",
+            ["SM_CHIMS"]    = "NPC (Mutant)",
+            ["SM_CONTR"]    = "NPC (Mutant)",
+            ["SM_DOG_S"]    = "NPC (Mutant)",
+            ["SM_FLESH"]    = "NPC (Mutant)",
+            ["SM_IZLOM"]    = "NPC (Mutant)",
+            ["SM_GIANT"]    = "NPC (Mutant)",
+            ["SM_POLTR"]    = "NPC (Mutant)",
+            ["SM_P_DOG"]    = "NPC (Mutant)",
+            ["SM_DOG_P"]    = "NPC (Mutant)",
+            ["SM_DOG_F"]    = "NPC (Mutant)",
+            ["SM_SNORK"]    = "NPC (Mutant)",
+            ["SM_TUSHK"]    = "NPC (Mutant)",
+            ["SM_ZOMBI"]    = "NPC (Mutant)",
+            ["SM_RAT"]	    = "NPC (Mutant)",
+            ["SM_KARLIK"]	= "NPC (Mutant)",
+            ["SM_LURKER"]	= "NPC (Mutant)",
+            ["SM_PSYSUCKER"]	= "NPC (Mutant)",
+    
+            ["C_HLCP_S"] 	= "Vehicles",
+            ["C_NIVA"] 		= "Vehicles",
+            ["SCRPTCAR"] 	= "Vehicles",
+    
+            ["ON_OFF_S"]    = "Squads",
+            
+            ["O_PHYSIC"]    = "Physic (Misc.)",
+            ["O_DSTRBL"]    = "Physic (Misc.)",
+            ["P_DSTRBL"]    = "Physic (Misc.)",
+            ["O_PHYS_S"]    = "Physic (Misc.)",
+            ["O_DSTR_S"]    = "Physic (Misc.)",
+            ["S_INVBOX"]    = "Physic (Misc.)",
+            ["O_INVBOX"]    = "Physic (Misc.)",
+            ["S_EXPLO"]     = "Physic (Misc.)",
+            ["II_EXPLO"]    = "Physic (Misc.)",
+    
+            ["ZS_MBALD"]    = "Anomaly",
+            ["ZS_GALAN"]    = "Anomaly",
+            ["ZS_MINCE"]    = "Anomaly",
+            ["ZS_RADIO"]    = "Anomaly",
+            ["ZS_TORRD"]    = "Anomaly",
+            ["ZS_NGRAV"]    = "Anomaly",
+            ["Z_MBALD"]     = "Anomaly",
+            ["Z_RADIO"]     = "Anomaly",
+            ["Z_CFIRE"]     = "Anomaly",
+            ["Z_NOGRAV"]    = "Anomaly",
+            ["Z_TORRID"]    = "Anomaly",
+            ["Z_RUSTYH"]    = "Anomaly",
+            ["ZS_BFUZZ"]    = "Anomaly",
+            ["ZS_AMEBA"]    = "Anomaly",
+            
+            ["AI_PHANT"]    = "Phantom",
+    }
+		local class = ini_sys:r_string_ex(section,"class")
+		local kind = ini_sys:r_string_ex(section,"kind") -- special class name for the sake of correct listing
+		if kind then class = kind end
+		local group = obj_to_spawn_classes[class]
+		local ext = ""
+		
+		-- Properties
+		local prop = {}
+		local is_squad = string.find(group,"Squad")
+		local cant_spawn_actor = string.find(group,"NPC") or string.find(group,"Physic")
+		local is_veh = string.find(group,"Vehicles")
+		local is_anom = string.find(group,"Anomaly")
+		local is_phantom = string.find(group,"Phantom")
+		if (is_squad) then
+			prop.no_id           = true
+			prop.squad           = true
+			prop.spawn_at_look   = true
+		elseif (cant_spawn_actor) then
+			prop.no_id           = true
+			prop.spawn_at_look   = true
+		elseif (is_veh) then 
+			prop.no_id           = true
+			prop.spawn_at_look   = true
+		elseif (is_anom) then 
+			prop.no_id           = true
+			prop.spawn_at_look   = true
+			prop.is_anom         = true
+		elseif (is_phantom) then 
+			prop.no_id           = true
+			prop.spawn_at_look   = true 
+			prop.use_level_spawn = true
+		end
+		
+		-- checks
+		local chk_smart  = self.d14_chk_s:GetCheck()
+		local chk_point  = self.d15_chk_p:GetCheck()
+		local chk_nearby = self.d15_chk_n:GetCheck()
+		
+		local smart_name = string.sub(self.d14_list_smrt:GetText(), 1, -2)
+		if smart_name and (smart_name ~= "") and SIMBOARD.smarts_by_names[smart_name] then
+			chk_smart = chk_smart and true or false
+		else
+			chk_smart = false
+		end
+		
+		-- Spawn 
+		local pos, lvid, gvid
+		if chk_smart then
+			local smrt = SIMBOARD.smarts_by_names[smart_name]
+			local se_smart = alife_object(smrt.id)
+			if se_smart then
+				pos = se_smart.position
+				lvid = se_smart.m_level_vertex_id
+				gvid = se_smart.m_game_vertex_id
+				ext = strformat("at smart [%s]",smart_name)
+			end
+			
+		elseif (prop.spawn_at_look) and chk_point then 
+			gvid = db.actor:game_vertex_id()
+			local r = level.get_target_dist and level.get_target_dist() or 3
+			pos = vector():set(db.actor:position())
+			pos:add(device().cam_dir:mul(r))
+			pos = vector():set(pos.x,db.actor:position().y,pos.z)
+			lvid = level.vertex_id(pos)
+			ext = "at cursor"
+		else
+			pos = db.actor:position()
+			lvid = db.actor:level_vertex_id()
+			gvid = db.actor:game_vertex_id()
+			ext = "near actor"
+		end
+	
+		if (prop.use_level_spawn) then 
+			if (level.spawn_item) then
+				level.spawn_item(section,pos,lvid,65535,false)
+				self:SetMsg( strformat("Spawned object [%s] using level spawn", section) , "-" )
+			end
+			return
+		end
+		local se_obj = section and alife_create_client(section, pos, lvid, gvid)
+		if se_obj then
+			if (prop.squad) then
+				local smrt
+				if (chk_smart) then
+					smrt = SIMBOARD.smarts_by_names[smart_name]
+					if smrt then
+						se_obj:create_npc(smrt)
+					end
+				else
+					se_obj:create_npc(nil, pos, lvid, gvid)
+				end
+				local sim = alife()
+				for k in se_obj:squad_members() do
+					local se_npc = k.object or k.id and sim:object(k.id)
+					if (se_npc) then
+						SIMBOARD:setup_squad_and_group(se_npc)
+						SendScriptCallback("squad_on_npc_creation",se_obj,se_npc,smrt)
+					end
+				end
+				self:SetMsg( strformat("Spawned squad [%s] (%s) %s", section, se_obj.id, ext) , "-" )
+			elseif (prop.is_anom) then 
+				local data = utils_stpk.get_object_data(se_obj)
+				if (data) then
+					data.object_flags = 31
+					--data.artefact_spawn_count = 1
+					data.restrictor_type = 0
+					data.shapes = {}
+					data.shapes[1] = {}
+					data.shapes[1].shtype = 0
+					data.shapes[1].offset = VEC_ZERO
+					data.shapes[1].radius = 10
+					utils_stpk.set_object_data(data,se_obj)
+				end
+				self:SetMsg( strformat("Spawned anomaly [%s] (%s) %s", section, se_obj.id, ext) , "-" )
+			else
+				self:SetMsg( strformat("Spawned object [%s] (%s) %s", section, se_obj.id, ext) , "-" )
+			end
+		else
+			self:SetMsg( strformat("No server object made for [%s]", section) , "!" )
+		end
+	end
+    item_backpack.keep_items = {}
+    item_backpack.on_game_start = function ()
+        RegisterScriptCallback("actor_on_item_take_from_box", item_backpack.actor_on_item_take_from_box)
+        RegisterScriptCallback("actor_on_item_use", item_backpack.actor_on_item_use)
+        item_backpack.keep_items = utils_data.collect_section(
+            ini_file("items\\settings\\backpack_stash.ltx"), "actor_backpack_keep_items",true
+        )
+    end
+    item_backpack.actor_on_item_use = function(obj)
+        if obj and (obj:section() == "itm_actor_backpack") then 
+            local backpack = db.actor:item_in_slot(13)
+            if backpack then
+                local actor = db.actor
+                alife_create_awaite(function (se_obj)
+                    if se_obj then
+                        local txt = strformat(game.translate_string("st_itm_stash_of_character"), db.actor:character_name())
+                        level.map_add_object_spot_ser(se_obj.id, "treasure", txt)
+                        actor_menu.set_msg(1, game.translate_string("st_stash_created"),4)
+                        local m_data = alife_storage_manager.get_state()
+                        if not (m_data.player_created_stashes) then
+                            m_data.player_created_stashes = {}
+                        end
+                        m_data.player_created_stashes[se_obj.id] = backpack:section()
+                        local b_id = backpack:id()
+                        alife_release_full(backpack)
+                        local function transfer_items(id)
+                            local obj = level.object_by_id(id)
+                            if (obj) then
+                                local function itr_inv(temp,item)
+                                    if (item and item:id() ~= b_id and item_backpack.keep_items[item:section()] == nil) then
+                                        if (IsAmmo(item) ~= true) or (is_ammo_for_wpn(item:section()) ~= true) then
+                                            if (ini_sys:r_bool_ex(item:section(),"quest_item",false) == false) then
+                                                if (db.actor:is_on_belt(item) == false and is_in_slot(item) == false) then
+                                                    db.actor:transfer_item(item,obj)
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                                db.actor:iterate_inventory(itr_inv)
+                                return true
+                            end
+                            return false
+                        end
+                        CreateTimeEvent(0,"actor_backpack",0,transfer_items,se_obj.id)
+                    end
+                end, "inv_backpack",actor:position(),actor:level_vertex_id(),actor:game_vertex_id())
+            else
+                actor_menu.set_msg(1, game.translate_string("st_stash_no_backpack_found"),4)
+            end
+        end
+    end
+    item_backpack.actor_on_item_take_from_box = function(box,obj)
+        if box:section() == "inv_backpack" then
+            if box:is_inv_box_empty() then
+                hide_hud_inventory()
+                local data = {
+                    stash_id = box:id(),
+                    cancel = false,
+                }
+                SendScriptCallback("actor_on_stash_remove",data)
+                if data.cancel then
+                    return
+                end
+                local id = box:id()
+                level.map_remove_object_spot(id, "treasure")
+                local se_obj = alife_object(id)
+                if se_obj then
+                    alife_release_client(se_obj)
+                end
+                local m_data = alife_storage_manager.get_state()
+                if (m_data.player_created_stashes and m_data.player_created_stashes[id]) then 
+                    local section = m_data.player_created_stashes[id]
+                    alife_create_item(section, db.actor)
+                    m_data.player_created_stashes[id] = nil
+                end
+            end
+        end
+    end
+    function item_backpack.UICreateStash:OnAccept()
+        alife_create_awaite(function (se_obj)
+            if se_obj then
+                local txt = self.input:GetText()
+                txt = txt ~= "" and txt or strformat(game.translate_string("st_itm_stash_of_character"), db.actor:character_name())
+                level.map_add_object_spot_ser(se_obj.id, "treasure", txt)
+                actor_menu.set_msg(1, game.translate_string("st_stash_created"),4)
+                local m_data = alife_storage_manager.get_state()
+                if not (m_data.player_created_stashes) then
+                    m_data.player_created_stashes = {}
+                end
+                m_data.player_created_stashes[se_obj.id] = self.section
+                alife_release_id(self.id)
+                local data = {
+                    stash_id = se_obj.id,
+                    stash_name = txt,
+                    stash_section = self.section,
+                }
+                SendScriptCallback("actor_on_stash_create",data)
+            end
+        end, "inv_backpack",db.actor:position(),db.actor:level_vertex_id(),db.actor:game_vertex_id())
+        self:Close()
+    end
+    --BETTER to iterate the available objects
+    --TO anomaly devs. WTF are you doing? in original file
+    trans_outfit.transparent_gg = function ()
+        local range1 = 80
+        local outfit_in_slot = db.actor:item_in_slot(7)
+        if not db.actor then return end
+        if outfit_in_slot and trans_outfit.ReadOutfitBlindnessKoeff(outfit_in_slot:section()) > 0.0 then
+            range1 = trans_outfit.ReadOutfitBlindnessKoeff(outfit_in_slot:section())
+        end
+        for _, t in pairs(db.storage) do
+            if t and t.object and IsStalker(t.object) and not IsActor(t.object) then
+                local dist_act_npc = db.actor:position():distance_to(t.object:position())
+                if dist_act_npc <= 120 then
+                    t.object:set_range(range1)
+                else
+                    t.object:set_range(80)
+                end
+            end
+        end
+    end
+    txr_mines.EXPLOSIVE_SECTION_LOOKUP = {
+        mine_new 	= 'mine_new_blow',
+        ied_rpg_new = 'rpg_new_blow',
+        ied_new 	= 'ied_new_blow',
+    }
+    txr_mines.FX_BY_SECTION = {
+        mine_new 	= 'mine',
+        ied_rpg_new = 'ied_rpg',
+        ied_new 	= 'ied',
+    }
+    function txr_mines.plant_bomb(obj, mode, delay)
+        local MIN_FORGET_TIME 	= 60*10
+        local MAX_FORGET_TIME 	= 60*30
+        local FUSE_TIME 		= 5
+
+        printf('plant_bomb(%s,%s,%s)', obj:name(), mode, delay)
+        local now = txr_mines.tss()
+        local used_section = obj:section()
+        local used_id = obj:id()
+        local planted_section = txr_mines.EXPLOSIVE_SECTION_LOOKUP[used_section]
+        printf('planted_section = %s', planted_section)
+        local cd = device().cam_dir
+        -- local r = level.get_target_dist()
+        -- local lvid = level.vertex_in_direction(level.vertex_id(device().cam_pos),device().cam_dir,r)
+        -- local p = level.vertex_position(vid)
+        local ap = db.actor:position()
+        local pp = vector():set(ap.x + cd.x, ap.y + 0.1, ap.z + cd.z)
+        local vid = level.vertex_id(pp)
+        pp = level.vertex_position(vid)
+        alife_create_awaite(function (planted_se)
+            printf('creating %s at', planted_se:name())
+            printf('%s,%s,%s,%s,%s',ap.x,ap.y,ap.z,db.actor:level_vertex_id(),db.actor:game_vertex_id())
+            printf('actual position')
+            printf('%s,%s,%s,%s,%s', planted_se.position.x,planted_se.position.y,planted_se.position.z,planted_se.m_level_vertex_id,planted_se.m_game_vertex_id)
+            local planted_id = planted_se.id
+            
+            printf('try FX')
+            _ = txr_mines.FX_BY_SECTION[used_section] and actor_effects.play_item_fx(txr_mines.FX_BY_SECTION[used_section])
+            
+            printf('check witnesses')
+            local witnesses = {}
+            for i in pairs(db.OnlineStalkers) do
+                local id = db.OnlineStalkers[i]
+                local npc = level.object_by_id(id)
+                if npc and IsStalker(npc) and npc:alive() then
+                    if npc:see(db.actor) then
+                        printf('%s saw player plant %s', npc:name(), planted_se:name())
+                        witnesses[id] = now + math.random(MIN_FORGET_TIME, MAX_FORGET_TIME)*level.get_time_factor()
+                    end
+                end
+            end
+            
+            printf('save mine data')
+            txr_mines._mines[planted_id] = {
+                exp_time = now + (delay or FUSE_TIME) * level.get_time_factor(),
+                mode = mode,
+                witnesses = witnesses,
+                -- level = level.name(),
+                active = true
+                -- blast_radius = ini_sys:r_float_ex(planted_section,"blast_r")
+            }
+            
+            
+            printf('create release event')
+            CreateTimeEvent(0,"release_planted_mine",0, txr_mines.release_item, used_id)
+        end, planted_section, ap, db.actor:level_vertex_id(), db.actor:game_vertex_id())
+    end
+    level_input.action_quick_load = function (dik,bind)
+		return true
+	end
+    axr_turn_on_campfire.eval_reset = function(st)
+        if (st.selected_id) then
+            axr_turn_on_campfire.already_selected[st.selected_id] = nil
+            st.selected_id = nil
+        end
+        st.vid = nil
+        st.__stimer = nil
+        st.camp = nil
+        st.state = nil
+        if (st.npc and state_mgr.get_state(st.npc) == "light_campfire") then
+            state_mgr.set_state(st.npc,"guard")
+        end
+        return false
+    end
+    axr_turn_on_campfire.light_campfire = function(npc)
+        local id = npc:id()
+        local st = db.storage[id] and db.storage[id].turn_on_campfire
+        local camp = st and st.selected_id and level.object_by_id(st.selected_id)
+        if not camp then
+            return axr_turn_on_campfire.eval_reset(st)
+        end
+        local CFZone = camp:get_campfire()
+        if not CFZone then
+            return axr_turn_on_campfire.eval_reset(st)
+        end
+        if render_get_dx_level() == 655361 then
+            camp:enable_anomaly()
+        end
+        if CFZone:is_on() then
+            return axr_turn_on_campfire.eval_reset(st)
+        end
+        CFZone:turn_on()
+        if IIsHost() then
+            GameManager:OnIInteract(alife_object(st.selected_id), 2)
+        end
+        axr_turn_on_campfire.eval_reset(st)
+    end
+    ui_inventory.snd_drop_item = sound_object([[interface\inv_drop]])
+    function ui_inventory.UIInventory:Action_Drop(obj, bag)
+        obj = self:CheckItem(obj,"Action_Drop")
+        db.actor:drop_item(obj)
+        GameManager:OnIDrop(alife_object(obj:id()))
+        self:PlaySND(ui_inventory.snd_drop_item)
+    end
+    function ui_inventory.UIInventory:Action_Drop_All(obj, bag)
+        obj = self:CheckItem(obj,"Action_Drop_All")
+        local ci = self.CC[bag]:GetCell_ID(obj:id())
+        for id,_ in pairs(ci.childs) do
+            local obj_c = level.object_by_id(id)
+            if obj_c then
+                db.actor:drop_item(obj_c)
+                GameManager:OnIDrop(alife_object(obj_c:id()))
+            end
+        end
+        db.actor:drop_item(obj)
+        GameManager:OnIDrop(alife_object(obj:id()))
+        self:PlaySND(ui_inventory.snd_drop_item)
+    end
+    task_status_functor.actor_has_fetch_item = function(tsk,task_id)
+        local actor = db.actor
+        local section = actor and load_var(actor,task_id.."_fetch")
+        if not section then
+            return
+        end
+        local item = section and actor:object(section)
+        if item then
+            if (task_id == "esc_2_12_stalker_nimble_task_1" or task_id == "jup_b220_trapper_task_3") then 
+                if (item:condition() >= 0.9) then
+                    tsk.stage = 1
+                elseif IIsHost() then
+                    tsk.stage = 0
+                end
+            else
+                local count = load_var(actor,task_id.."_fetch_count")
+                if (count and count > 1) then
+                     local cnt = utils_item.get_amount(db.actor, section, 1)
+                    if (cnt >= count) then
+                        tsk.stage = 1
+                    elseif IIsHost() then
+                        tsk.stage = 0
+                    end
+                    return
+                end
+                tsk.stage = 1 -- should never happen but in such case let player finish quest for free
+            end
+        elseif section and string.find(section, "af_") then
+            if actor:object(section .. "_af_aam")
+            or actor:object(section .. "_af_iam")
+            or actor:object(section .. "_af_aac")
+            or actor:object(section .. "_lead_box")
+            then
+                tsk.stage = 1
+            elseif IIsHost() then
+                tsk.stage = 0
+            end
+        elseif IIsHost() then
+            tsk.stage = 0
+        end
+    end
+    function xr_camper.action_patrol:reset_scheme()
+        --utils_data.debug_write("action_patrol:reset_scheme")
+        if not self.move_mgr then
+            self.move_mgr = move_mgr.move_mgr(self.object)
+        end
+        state_mgr.set_state(self.object, "patrol")
+        self.a.signals = {}
+        self.a.scan_table = {}
+        if self.a.sniper == true then
+            self.move_mgr:reset(self.a.path_walk,utils_obj.path_parse_waypoints(self.a.path_walk),nil,nil,nil,self.a.suggested_state,{obj=self,func=self.process_point})
+            local path = self.a.path_look and patrol(self.a.path_look)
+            if path ~= nil then
+                for k = 0, path:count() - 1 do
+                    for i = 0, 31 do
+                        if path:flag(k, i) then
+                            if self.a.scan_table[i] == nil then
+                                self.a.scan_table[i] = {}
+                            end
+                            local t = self.a.scan_table[i]
+                            t[#t+1] = {key = k, pos = path:point(k)}
+                        end
+                    end
+                end
+            end
+            if (self.object:sniper_update_rate() == false) then
+                self.object:sniper_update_rate(true)
+            end
+        else
+            self.move_mgr:reset(self.a.path_walk, utils_obj.path_parse_waypoints(self.a.path_walk), self.a.path_look, utils_obj.path_parse_waypoints(self.a.path_look), nil, self.a.suggested_state, { obj = self, func = self.process_point})
+            if self.object:sniper_update_rate() == true then
+                self.object:sniper_update_rate(false)
+            end
+        end
+        self.a.last_look_point = nil
+        self.a.cur_look_point = nil
+        self.a.scan_begin = nil
+    end
+    xr_effects.game_disconnect = function (actor, npc)
+        if IIsHost() then
+            MPMain_STOGETHER.ServerSOSOCK:CloseListenSocket()
+        else
+            MPMain_STOGETHER.ClientSocks:Disconnect()
+        end
+		exec_console_cmd("disconnect")
+	end
+    simulation_objects.get_server_entity = function(id)
+        for i = 1, simulation_objects.object_registry_size do
+            local se_obj = simulation_objects.object_registry[i]
+            if se_obj and se_obj.id == id then
+                return se_obj
+            end
+        end
+    end
+end

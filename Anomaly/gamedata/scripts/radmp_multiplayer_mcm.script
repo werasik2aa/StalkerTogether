@@ -1,0 +1,15 @@
+function on_mcm_load()
+    return {
+        id = "werasik2aa", sh = true, gr = {
+            { id = "banner", type = "slide", text = "ui_radmp_title", size = { 512, 50 }, spacing = 20 },
+            { id = "p2p_peer_chat", type = "key_bind", val = 2, def = DIK_keys.DIK_RMENU },
+			{ id = "show_marks", type = "check", val = 1, def = true},
+            { id = "sync_given_i", type = "check", val = 1, def = true},
+            { id = "show_name", type = "check", val = 1, def = true},
+            { id = "clear_inv", type = "check", val = 1, def = false},
+            { id = "drop_inv", type = "check", val = 1, def = false},
+            { id = "friendly_fire", type = "check", val = 1, def = false},
+            { id = "max_players", type = "track", val = 2, min = 1, max = 8, step = 1, def = 3 }
+        }
+    }
+end

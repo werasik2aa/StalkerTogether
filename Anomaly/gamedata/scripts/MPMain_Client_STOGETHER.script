@@ -1,0 +1,282 @@
+--[[
+[================]
+C++ Programmer & Author: Werasik2aa
+Project Creator: Monokit
+Description: Patch for client things. Like spawn quest item or block spawn some objects.
+Here patches only for client! Which not hosted game!
+[================]
+--]]
+local GameManager = SteamGameManager()
+function Patch()
+    log("[Client] Patching game for some things...")
+	_G.alife_create = function (sec, pos, lid, gid, id, state)
+		if id or string.match(sec, "level_changer") then
+            return alife_create_local(sec, pos, lid, gid, id, state)
+        end
+	end
+	death_manager.create_release_item = function (npc)
+		if not npc then return end
+		local death_dropped = se_load_var(npc:id(), npc:name(), "death_dropped")
+        if death_dropped then return end
+        se_save_var(npc:id(), npc:name(), "death_dropped", true)
+		npc:iterate_inventory(function (_, itm)
+			alife_release(itm)
+		end, nil)
+		GameManager:OnIStashOpen(alife_object(npc:id()))
+	end
+	local temp = {}
+	treasure_manager.try_spawn_treasure = function (box)
+		local id = box:id()
+		if temp[id] then return end
+		temp[id] = true
+		box:iterate_inventory_box(function (_, itm)
+            alife_release(itm)
+        end, nil)
+		GameManager:OnIStashOpen(alife_object(id))
+	end
+	mlr_utils.spawn_item = function(name)
+		local SPWN = {
+			spawn_1_11_af_medusa_kmb = {["af_medusa"] = {-245.78, -14.29, -16.55, 16254, 381}},
+			spawn_povars_12_70 = {["ammo_12x70_buck"] = {25.58, -11.88, -236.22, 77453, 1986, 5}},
+			spawn_povars_ammo_pkm_100 = {["ammo_pkm_100"] = {25.58, -11.88, -236.22, 77453, 1986, 5}},
+			spawn_povars_9_18_6 = {["ammo_9x18_fmj"] = {25.58, -11.88, -236.22, 77453, 1986, 6}},
+			spawn_povars_5_45_3 = {["ammo_5.45x39_fmj"] = {25.58, -11.88, -236.22, 77453, 1986, 3}},
+			spawn_povars_5_45_6 = {["ammo_5.45x39_fmj"] = {25.58, -11.88, -236.22, 77453, 1986, 6}},
+			spawn_povars_7_62 = {["ammo_7.62x54_7h1"] = {25.58, -11.88, -236.22, 77453, 1986, 2}},
+			spawn_povars_berill = {["specops_outfit"] = {25.54, -11.88, -234.85, 77112, 1986}},
+			spawn_wpn_ak74_jurov_task_2_1 = {["wpn_ak74_jurov_task_2"] = {-65.71, -31.52, -352.51, 314724, 571}},
+			spawn_wpn_ak74_jurov_task_2_2 = {["wpn_ak74_jurov_task_2"] = {-106.22, -29.38, -394.22, 232856, 443}},
+			spawn_wpn_saiga_rookie_pole = {["wpn_saiga_rookie_pole"] = {-164.93, 0.16, 77.97, 80940, 5146}},
+			wpn_svd_bandit_depo_task_1_1 = {["wpn_svd_bandit_depo_task_1"] = {-219.37, 1.37, 209.31, 1777, 971}},
+			wpn_svd_bandit_depo_task_1_2 = {["wpn_svd_bandit_depo_task_1"] = {-240.83, 3.53, 217.42, 203, 935}},
+			wpn_svd_bandit_depo_task_1_3 = {["wpn_svd_bandit_depo_task_1"] = {-213.45, 3.63, 269.33, 2672, 977}}
+		}
+		for k, v in pairs(SPWN[name]) do
+			for _ = 1, (v[6] or 1) do
+				alife_create_client(k, vector():set(v[1], v[2], v[3]), v[4], v[5])
+			end
+		end
+	end
+	ph_door.try_to_open_door = function (...)
+		
+	end
+	ph_door.try_to_close_door = function (...)
+		
+	end
+	task_functor.smart_control_task_target_functor = function(task_id,field,p,tsk)
+		-- EMPTY IT
+	end
+	tasks_clear_map.mutants_in_map = function (...)
+		return true
+	end
+	state_mgr_direction.turn = function (...)
+
+	end
+	state_mgr_direction.look_at_object = function (...)
+		
+	end
+	xr_effects.set_weather = function (actor, npc, p)
+		
+	end
+	utils_obj.create_squad = function (...)
+		--no squad for client spawner
+	end
+	ui_sleep_dialog.dream_callback = function()
+		local shelf = ui_sleep_dialog
+		if shelf.GUI.forced then
+			level.add_cam_effector("camera_effects\\surge_01.anm", 10, false, "ui_sleep_dialog.dream_callback2")
+		else
+			level.add_cam_effector("camera_effects\\sleep.anm", 10, false, "ui_sleep_dialog.dream_callback2")
+		end
+		local hours = shelf.GUI.forced or shelf.GUI.time_track:GetIValue()
+		--printf("dream_callback hours=%s",hours)
+		if IIsHost() then
+			level.change_game_time(0,hours,0)
+		end
+		db.actor.power = 1
+		SendScriptCallback("actor_on_sleep",hours)
+	end
+	alife_storage_manager.get_state().stop_respawns = true
+	xr_effects.setup_companion_task = function(actor,npc,p)
+		local sq_sec = p[1]
+		local smrt_name = p[2]
+		local var_id = p[3]
+		local is_hostage = p[5]
+		local var = var_id and var_id ~= "nil" and load_var(db.actor,var_id)
+		local smart_id = var and var.smart_id
+		local smart = smart_id and alife_object(smart_id) or smrt_name and smrt_name ~= "nil" and SIMBOARD.smarts_by_names[smrt_name]
+		--xQd
+		if _G.WARFARE and (not smrt_name or smrt_name == "false") and (not is_hostage or is_hostage == "false") then
+			for sname, sm in pairs(SIMBOARD.smarts_by_names) do
+				if sm.is_on_actor_level == true and sm.dist_to_actor <= 50 then
+					smart = sm
+					save_var(db.actor,"warfare_escort_task_smart", sname)
+					break
+				end
+			end
+		end
+		--xQd end
+		if not (smart) then
+			printe("! setup_companion_task: no smart found! %s", smart_id or smrt_name)
+			return
+		end
+		if not (ini_sys:section_exist(sq_sec)) then
+			printe("! setup_companion_task: Trying to setup companion squad with a non-existent section!")
+			return
+		end
+	end
+	function sim_board.simulation_board:create_squad(spawn_smart, sq_id)
+		local squad_id = tostring(sq_id)
+		local squad = alife_create(squad_id,spawn_smart.position,	spawn_smart.m_level_vertex_id,spawn_smart.m_game_vertex_id)
+		if not squad then return end
+		squad:create_npc(spawn_smart)
+		self:assign_squad_to_smart(squad, spawn_smart.id)
+
+		local sim = alife()
+		for k in squad:squad_members() do
+			local se_obj = k.object or k.id and sim:object(k.id)
+			if (se_obj) then
+				SIMBOARD:setup_squad_and_group(se_obj)
+				SendScriptCallback("squad_on_npc_creation",squad,se_obj,spawn_smart)
+			end
+		end
+		return squad
+	end
+	function sim_board.simulation_board:create_squad_at_named_location(loc_name, squad_id) -- tdef
+	
+		-- if not (ini_file('misc\\squad_descr.ltx'):section_exist(squad_id)) then
+		if not (ini_sys:section_exist(squad_id)) then
+			callstack()
+			printf("create_squad_at_named_location: squad section does not exist in misc\\squad_descr.ltx: %s",squad_id)
+			return
+		end
+		
+		local str = utils_data.read_from_ini(ini_file("named_locations.ltx"),loc_name,'position')
+		
+		if not str then 
+			callstack()
+			printf('create_squad_at_named_location: named location not defined in named_locations.ltx: %s',loc_name) 
+			return 
+		end
+		
+		-- printf('%s: %s',loc_name, str)
+		
+		local function str_explode_num(str,sep,plain)
+			if not (sep ~= "" and string.find(str,sep,1,plain)) then
+				return { str }
+			end
+			local t = {}
+			local size = 0
+			for s in str:gsplit(sep,plain) do 
+				size = size + 1
+				t[size] = tonumber(s)
+				if not t[size] then
+					printf("str_explode_num: warning: %s couldn't be parsed as number", s)
+				end
+			end
+			return t
+		end
+		local data = str_explode_num(str,',')
+		
+		-- for k,v in pairs(data) do
+			-- printf('data[%s] = %s (%s)',k, v, type(v))
+		-- end
+		
+		local pos = vector():set(data[1], data[2], data[3])
+		
+		local squad = alife_create(squad_id, pos,	data[4], data[5])
+		if not squad then return end
+		squad:create_npc(nil, pos, data[4], data[5])
+	
+		local sim = alife()
+		for k in squad:squad_members() do
+			local se_obj = k.object or k.id and sim:object(k.id)
+			if (se_obj) then
+				SIMBOARD:setup_squad_and_group(se_obj)
+				-- Alundaio
+				SendScriptCallback("squad_on_npc_creation",squad,se_obj)
+				-- Alundaio
+			end
+		end
+		return squad
+	end
+	function sim_board.simulation_board:assign_squad_to_smart(squad, smart_id)
+	end
+	function smart_terrain.se_smart_terrain:try_respawn()
+		--NO RESPAWN
+	end
+	function task_manager.CRandomTask:set_task_failed(task_id)
+		if self.task_info[task_id] and IIsHost() then
+			self.task_info[task_id].forced_status = "fail"
+		end
+	end
+	function task_manager.CRandomTask:task_fail(p1)
+		-- NOCHECKTASK
+	end
+	function mob_walker.mob_walker:update(delta)
+		--HOST CONTROL MOB
+	end
+	function mob_walker.mob_walker:waypoint_callback(obj, action_type, index)
+		--HOST CONTROL MOB
+	end
+	function state_mgr_animation.animation:set_state(new_state, fast_set)
+		--HOST CONTROL NPC
+	end
+	function xrs_facer.action_facer:execute()
+		--HOST CONTROL NPC
+	end
+	pda.npc_on_net_spawn = function(npc, se_obj)
+		if not se_obj then return end
+		se_save_var(se_obj.id, se_obj:name(), "last_seen_level", level.name())
+		se_save_var(se_obj.id, se_obj:name(), "last_seen_time", game.get_game_time())
+	end
+	dialogs_axr_companion.become_actor_companion = function(actor, npc)
+		local npc = dialogs.who_is_npc(actor,npc)
+		local squad = get_object_squad(npc)
+		GameManager:OnIWantCompanion(alife_object(npc:id()))
+		if not (squad) then
+			return
+		end
+		axr_companions.companion_squads[squad.id] = squad
+		SIMBOARD:assign_squad_to_smart(squad, nil)
+		for k in squad:squad_members() do
+			local member = db.storage[k.id] and db.storage[k.id].object
+			if ( member and member:alive() ) then
+				axr_companions.add_to_actor_squad(member)
+			end
+		end
+	end
+	function bind_anomaly_zone.anomaly_zone_binder:spawn_artefact_randomly()
+		--NOT WORKER
+	end
+	if alife() then
+		alife().register = function (se)
+			callstack()
+			log("!NO WAY!")
+		end
+		alife().create = function (se)
+			callstack()
+			log("!NO WAY!")
+		end
+	end
+	if level then
+		level.set_weather = function (name, forc)
+			-- BLOCK WEATHER SET
+		end
+	end
+	dialogs.drx_sl_give_sl_task = function ()
+		-- HOST CAN TAKE THAT BUGGY QUEST LINE
+	end
+	bind_anomaly_field.dyn_anomalies_spawn = function ()
+		-- HOST MUST RESPAWN ANONALIES
+	end
+	bind_anomaly_field.dyn_anomalies_refresh = function ()
+		-- HOST MUST RESPAWN ANONALIES
+	end
+	smart_terrain_warfare.smart_terrain_on_update = function(smart)
+		-- HOST MUST UPDATE SMART TERRAIN
+	end
+	sim_squad_bounty.try_spawn = function ()
+		-- HOST MUST SPAWN SUUADS
+	end
+end

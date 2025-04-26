@@ -1,0 +1,117 @@
+--[[
+[================]
+C++ Programmer & Author: Werasik2aa
+Project Creator: Monokit
+Description: CALLING CALLBACKS! LIKE IDEAD IPICKUP E.T.C
+[================]
+--]]
+local GameManager = SteamGameManager()
+local function on_game_load()
+    if MPMain_STOGETHER.GameLoaded then return end
+    MPMain_STOGETHER.GameLoaded = true
+    log1("!TESTAA")
+    _G.AddUniqueCall(_G.ProcessEventQueue)
+    GameManager:SetNickName("TEST1")
+    GameManager:SetServerName("TEST1-server")
+    GameManager:SetGameLoaded(true)
+    GameManager:SetTestMyClient(false)
+    GameManager:OnRequest()
+end
+local function on_key_press(key)
+    if not db.actor then return end
+    if key == MPMain_STOGETHER.ChatKeyBind then
+        MChatbox_STOGETHER.OpenClose()
+    end
+end
+local function actor_on_item_put_in_box(box, item)
+    if not MPMain_STOGETHER.GameLoaded then return end
+    local so = alife_object(item:id())
+    if so then
+        GameManager:OnIDrop(so)
+    end
+end
+local function actor_on_item_drop(item)
+    if not MPMain_STOGETHER.GameLoaded then return end
+    local so = alife_object(item:id())
+    if so and so.parent_id and so.parent_id < 65535 and so.parent_id > 0 then
+        local spa = alife_object(so.parent_id)
+        if spa and not IsStalker(spa) then return end
+        GameManager:OnIDrop(so)
+    end
+end
+local function actor_on_item_take(item)
+    if not MPMain_STOGETHER.GameLoaded then return end
+    GameManager:OnIPickup(alife_object(item:id()))
+    --GameManager:OnICustomAnimation("werasik2aa_pickup", item:section(), true, 1)
+end
+local function actor_on_sleep(hour)
+    GameManager:OnICustomAnimation("sleep_idle_0", "", true, 1.6)
+    GameManager:OnTimeChanged()
+end
+local function actor_on_item_use(item)
+    if not MPMain_STOGETHER.GameLoaded then return end
+    local so = alife_object(item:id())
+    if not so then return end
+    GameManager:OnIUse(so)
+    if IsTablets(item) then
+        --GameManager:OnICustomAnimation("werasik2aa_tablets", item:section(), true, 2)
+    elseif IsDrink(item) then
+        --GameManager:OnICustomAnimation("werasik2aa_drink", item:section(), true, 2)
+    elseif IsFood(item) then
+        --GameManager:OnICustomAnimation("werasik2aa_eat", item:section(), true, 2)
+    elseif IsCigar(item) then
+        --GameManager:OnICustomAnimation("werasik2aa_kurit", "sigaret_for_nps", true, 3)
+    elseif IsDrugs(item) then
+        --GameManager:OnICustomAnimation("werasik2aa_drug", item:section(), true, 3.5)
+    elseif IsBandages(item) then
+        --GameManager:OnICustomAnimation("werasik2aa_bandage", item:section(), true, 4)
+    elseif IsMedKit(item) then
+        --GameManager:OnICustomAnimation("werasik2aa_medkit", item:section(), true, 5)
+    elseif IsMedical(item) then
+        --GameManager:OnICustomAnimation("werasik2aa_tablets", item:section(), true, 3.5)
+    end
+end
+--ITERATE AND REQUEST NEW ITEMS
+local iterated = {}
+local function ActorMenu_on_before_init_mode(na, flag, obje)
+    if not obje or iterated[obje:id()] or not MPMain_STOGETHER.GameLoaded then return end
+    if IIsHost() then return end
+    if string.match(na, "trade") then
+        obje:iterate_inventory(function (_, itm)
+            alife_release(itm)
+        end, nil)
+        GameManager:OnIStashOpen(alife_object(obje:id()))
+        --iterated[obje:id()] = true
+    end
+end
+local function monster_on_loot_init(victim, ltable)
+    GameManager:OnICustomAnimation("dinamit_0", "", true, 2)
+end
+function on_game_start()
+    if GameManager:GetFlag() then
+        GameManager:ClearData(false)
+        if not IIsHost() then
+            MPMain_STOGETHER.ServerSOSOCK:OpenListenSocket(44139)
+        end
+        if not IIsConnected() then
+            MPMain_STOGETHER.ClientSocks:CreateConnection("127.0.0.1:44139")
+        end
+    end
+    -- REPEAT PATCH UNPATCHED PLACE
+    MPMain_GamePatches_STOGETHER.Patch()
+    if not GameManager:GetFlag() then
+        MPMain_Client_STOGETHER.Patch()
+    else
+        MPMain_Server_STOGETHER.Patch()
+    end
+    -- REGISTER CALLBACKS
+    RegisterScriptCallback("on_game_load", on_game_load)
+    RegisterScriptCallback("ActorMenu_on_before_init_mode", ActorMenu_on_before_init_mode)
+    RegisterScriptCallback("actor_on_item_take", actor_on_item_take)
+    RegisterScriptCallback("actor_on_item_drop", actor_on_item_drop)
+    RegisterScriptCallback("actor_on_item_use", actor_on_item_use)
+    RegisterScriptCallback("on_key_press", on_key_press)
+    RegisterScriptCallback("monster_on_loot_init", monster_on_loot_init)
+    RegisterScriptCallback("actor_on_sleep", actor_on_sleep)
+    RegisterScriptCallback("actor_on_item_put_in_box", actor_on_item_put_in_box)
+end

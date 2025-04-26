@@ -4,6 +4,3 @@ AnomalyLauncher.exe.config
 AnomalyLauncher.pdb
 1.bat
 Settings.dat
-bin/
-gamedata/
-db/

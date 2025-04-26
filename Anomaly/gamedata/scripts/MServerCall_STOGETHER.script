@@ -1,0 +1,54 @@
+--[[
+[================]
+C++ Programmer & Author: Werasik2aa
+Project Creator: Monokit
+Description: Server Callbacks.
+[================]
+--]]
+function OnPlayerConnected(PlayerNetID, nickname)
+    log("-[Server] Task data request from: PlayerID: "..tostring(PlayerNetID))
+    local tm = task_manager.get_task_manager()
+    log("[Server] Sending Tasks!")
+    for _, tma in pairs(tm.task_info) do
+        if tma.t then
+            MPMain_STOGETHER.PerformRespawnTaskObjects(tma)
+            MPMain_STOGETHER.GameManager:OnIGetTask(tma.t, tma.current_title or "", tma.current_descr or "", tma.task_giver_id or 65535, tma.stage, false)
+        end
+    end
+end
+function OnPlayerDisconnected(PlayerNetID, NickName)
+    log("[Server] On Player Disconnected")
+    log("[Server] PlayerID: "..tostring(PlayerNetID))
+    log("[Server] PlayerNA: "..tostring(NickName))
+end
+function OnPlayerChatted(PlayerNetID, NickName, MSG)
+    log("[Server] On Player Chat")
+    log("[Server] PlayerID: "..tostring(PlayerNetID))
+    log("[Server] PlayerNA: "..tostring(NickName))
+    log("[Server] SMessage: "..tostring(MSG))
+    -- Chat commands can be here too
+end
+function IsUsedStorage(npc)
+    if not npc then return false end
+    if IsStalker(npc) then
+        if npc:alive() then
+            trade_manager.update(npc, false)
+            return false
+        end
+        local death_dropped = se_load_var(npc:id(), npc:name(), "death_dropped")
+        if not death_dropped then
+            log("! [SERVER] PROCESSING INVENTORY->CORPSE STORAGE!")
+            death_manager.create_release_item(npc)
+            return true
+        end
+    elseif IsInvbox(npc) then
+        local loot_dropped = se_load_var(npc:id(), npc:name(), "loot_dropped")
+        if not loot_dropped then
+            log("! [SERVER] PROCESSING INVENTORY->BOX STORAGE!")
+            treasure_manager.try_spawn_treasure(npc)
+            se_save_var(npc:id(), npc:name(), "loot_dropped", true)
+            return true
+        end
+    end
+    return false
+end

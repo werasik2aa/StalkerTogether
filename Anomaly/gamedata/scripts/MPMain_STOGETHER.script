@@ -1,0 +1,451 @@
+--[[
+[================]
+C++ Programmer & Author: Werasik2aa
+Project Creator: Monokit
+Description: Settings. Basic declarations. Universal. Possible to use in COP mods.
+Basic COP sync included. (Positions, Animations).
+[================]
+--]]
+GameManager = SteamGameManager()
+ServerSOSOCK = SteamServer()
+ClientSocks = SteamClient()
+GameLoaded = false
+WaitMe = 0
+IDead = false -- thing thing stops spamm death action
+AwaitThing = nil
+SyncGivenItems = ui_mcm and ui_mcm.get("werasik2aa/sync_given_i") and true or false
+SyncGivenMoney = ui_mcm and ui_mcm.get("werasik2aa/sync_given_m") and true or false
+ShowMarks = ui_mcm and ui_mcm.get("werasik2aa/show_marks") and true or false
+ShowNames = ui_mcm and ui_mcm.get("werasik2aa/show_name") and true or false
+ClearInvOnDeath = ui_mcm and ui_mcm.get("werasik2aa/clear_inv") or false
+DropInvOnDeath = ui_mcm and ui_mcm.get("werasik2aa/drop_inv") or false
+MaxPlayers = ui_mcm and ui_mcm.get("werasik2aa/max_players") or 3
+FriendlyFire = ui_mcm and ui_mcm.get("werasik2aa/friendly_fire") or false
+ChatKeyBind = ui_mcm and ui_mcm.get("werasik2aa/p2p_peer_chat") or DIK_keys.DIK_RMENU
+
+--MAIN SERVER-CLIENT BOOLEANS
+_G.IIsConnected = function ()
+    return ClientSocks:IsConnected()
+end
+_G.IIsHost = function ()
+    return ServerSOSOCK:IsSteamSocketOpen()
+end
+_G.IIsClient = function ()
+    return not IIsHost()
+end
+xr_conditions.IIsConnected = function ()
+    return IIsConnected()
+end
+xr_conditions.IIsClient = function ()
+    return IIsClient()
+end
+xr_conditions.IIsHost = function ()
+    return IIsHost()
+end
+
+--OTHER THINGS
+_G.alife_register = function (se)
+    alife():register(se)
+end
+_G.alife_register_local = function (se)
+    alife():register_local(se)
+end
+_G.IsActor = function(o, c)
+    if not c then
+        c = o and o:clsid()
+    end
+    return c == clsid.actor or c == clsid.script_actor
+end
+_G.IsSquad = function(o, c)
+    if not c then
+        c = o and o:clsid()
+    end
+    return c == clsid.online_offline_group or c == clsid.online_offline_group_s
+end
+_G.IsFood = function(o)
+	local str = type(o) ~= "string" and (o.section_name and o:section_name() or o.section and o:section()) or o
+	local d = ini_sys:r_string(str, "kind")
+	local ptrs = {
+		["i_food"] = true,
+		["i_mutant_cooked"] = true,
+	}
+	return d and ptrs[d] and not string.find(str, "cigar") or false
+end
+_G.IsMedical = function(o)
+	local str = type(o) ~= "string" and (o.section_name and o:section_name() or o.section and o:section()) or o
+	local d = ini_sys:r_string(str, "kind")
+	return d == "i_medical"
+end
+_G.IsMedKit = function(o)
+	local str = type(o) ~= "string" and (o.section_name and o:section_name() or o.section and o:section()) or o
+	local d = ini_sys:r_string(str, "kind")
+	if d == "i_medical" then
+		if string.match(str, "medkit") then return true end
+	end
+	return false
+end
+_G.IsTablets = function(o)
+	local str = type(o) ~= "string" and (o.section_name and o:section_name() or o.section and o:section()) or o
+	local d = ini_sys:r_string(str, "kind")
+	if d == "i_medical" then
+		if string.match(str, "drug_") or str == "antirad_kalium" or str == "yadylin" or str == "akvatab" then return true end
+	end
+	return false
+end
+_G.IsBandages = function(o)
+	local str = type(o) ~= "string" and (o.section_name and o:section_name() or o.section and o:section()) or o
+	local d = ini_sys:r_string(str, "kind")
+	if d == "i_medical" then
+		local ptsr = {
+			["bandage"] = true,
+			["jgut"] = true,
+		}
+		for t, _ in pairs(ptsr) do
+			if string.find(str, t) then return true end
+		end
+	end
+	return false
+end
+_G.IsDrugs = function(o)
+	local str = type(o) ~= "string" and (o.section_name and o:section_name() or o.section and o:section()) or o
+	local d = ini_sys:r_string(str, "kind")
+	if d == "i_medical" then
+		local ptrs = {
+			["glucose"] = true,
+			["morphine"] = true,
+			["analgetic"] = true,
+			["rebirth"] = true,
+			["adrenaline"] = true,
+			["stimpack"] = true,
+			["salicidic"] = true,
+		}
+		for t, _ in pairs(ptrs) do
+			if string.match(str, t) then return true end
+		end
+	end
+	return false
+end
+_G.IsBowl = function(o)
+	local str = type(o) ~= "string" and (o.section_name and o:section_name() or o.section and o:section()) or o
+	local d = ini_sys:r_string(str, "kind")
+	return d == "i_mutant_cooked"
+end
+_G.IsDrink = function(o)
+	local str = type(o) ~= "string" and (o.section_name and o:section_name() or o.section and o:section()) or o
+	local d = ini_sys:r_string(str, "kind")
+	return d == "i_drink"
+end
+_G.IsCigar = function(o)
+	local str = type(o) ~= "string" and (o.section_name and o:section_name() or o.section and o:section()) or o
+	local d = ini_sys:r_string(str, "kind")
+	local ptrs = {
+		["i_food"] = true,
+		["i_drink"] = true
+	}
+	return d and ptrs[d] and string.find(str, "cigar")
+end
+_G.alife_create_client = function(sec,pos,lid,gid,id,state)
+    if type(pos) == "userdata" and not pos.x then
+        local obj = pos
+        state = gid
+        
+        if (type(obj.id) == "function") then
+            pos = obj:position()
+            lid = obj:level_vertex_id()
+            gid = obj:game_vertex_id()
+            id  = lid and obj:id()
+        elseif obj.id then
+            pos = obj.position
+            lid = obj.m_level_vertex_id
+            gid = obj.m_game_vertex_id
+            id  = lid and obj.id
+        else
+            callstack()
+            printe("!ERROR: alife_create | invalid usedata type")
+            return
+        end
+    end
+    
+    -- Validate
+    if not (sec and ini_sys:section_exist(sec)) then
+        callstack()
+        printe("!ERROR: alife_create | section [%s] is invalid!",sec)
+        return
+    elseif not (pos and lid and gid) then
+        callstack()
+        printe("!ERROR: invalid parameter for alife():create!",sec)
+        return
+    end
+
+    local se_obj
+    if state then
+        se_obj = alife():create(sec, pos, lid, gid, id, state)
+    elseif id then
+        se_obj = alife():create(sec, pos, lid, gid, id)
+    else
+        se_obj = alife():create(sec, pos, lid, gid)
+    end
+    if not se_obj then
+        printe("!ERROR: alife_create | failed to create object [%s]!",sec)
+    else
+        if not IIsHost() then
+            if MPMain_STOGETHER.GameLoaded then
+                GameManager:OnQuestSpawner(se_obj)
+                if IsStalker(se_obj) or IsMonster(se_obj) then
+                    alife():release(se_obj)
+                end
+            end
+        else
+            alife_record(se_obj, true)
+            return se_obj
+        end
+    end
+end
+_G.alife_create_awaite = function(funca,sec,pos,lid,gid,id,state)
+	if IIsHost() then
+        local se_obj = alife_create(sec, pos, lid, gid, id, state)
+        funca(se_obj)
+        return se_obj --USELES BUT Why not?
+    end
+    if type(pos) == "userdata" and not pos.x then
+        local obj = pos
+        state = gid
+        
+        if (type(obj.id) == "function") then
+            pos = obj:position()
+            lid = obj:level_vertex_id()
+            gid = obj:game_vertex_id()
+            id  = lid and obj:id()
+        elseif obj.id then
+            pos = obj.position
+            lid = obj.m_level_vertex_id
+            gid = obj.m_game_vertex_id
+            id  = lid and obj.id
+        else
+            callstack()
+            printe("!ERROR: alife_create | invalid usedata type")
+            return
+        end
+    end
+    
+    -- Validate
+    if not (sec and ini_sys:section_exist(sec)) then
+        callstack()
+        printe("!ERROR: alife_create | section [%s] is invalid!",sec)
+        return
+    elseif not (pos and lid and gid) then
+        callstack()
+        printe("!ERROR: invalid parameter for alife():create!",sec)
+        return
+    end
+
+    local se_obj
+    if state then
+        se_obj = alife():create(sec, pos, lid, gid, id, state)
+    elseif id then
+        se_obj = alife():create(sec, pos, lid, gid, id)
+    else
+        se_obj = alife():create(sec, pos, lid, gid)
+    end
+    
+    if not se_obj then
+        printe("!ERROR: alife_create | failed to create object [%s]!",sec)
+    else
+        GameManager:OnQuestSpawner(se_obj)
+        alife():release(se_obj)
+        -- wait 5 secs for spawned and call funca
+        CreateTimeEvent(0, "TIME_EVENT_AWAIT", 0.1, function (DTIMEWAIT)
+            if time_global() > DTIMEWAIT then
+                callstack()
+                log("![ERROR] Failed to catch entity. Host refuse that spawn or failed to spawn?")
+                return true
+            end
+            if not funca then
+                callstack()
+                log("![ERROR] NO FUNCTION PROVIDED!")
+                return true
+            end
+            if AwaitThing and AwaitThing:section_name() == sec then
+                log("-[Client] Alife object spawned Catching!")
+                funca(AwaitThing)
+                return true
+            end
+            return false
+        end, time_global() + 5000)
+    end
+end
+_G.alife_create_local = function(sec,pos,lid,gid,id,state)
+	if IIsHost() then return alife_create(sec, pos, lid, gid, id, state) end
+    if type(pos) == "userdata" and not pos.x then
+        local obj = pos
+        state = gid
+        if (type(obj.id) == "function") then
+            pos = obj:position()
+            lid = obj:level_vertex_id()
+            gid = obj:game_vertex_id()
+            id  = lid and obj:id()
+        elseif obj.id then
+            pos = obj.position
+            lid = obj.m_level_vertex_id
+            gid = obj.m_game_vertex_id
+            id  = lid and obj.id
+        else
+            callstack()
+            printe("!ERROR: alife_create | invalid usedata type")
+            return
+        end
+    end
+    -- Validate
+    if not (sec and ini_sys:section_exist(sec)) then
+        callstack()
+        printe("!ERROR: alife_create | section [%s] is invalid!",sec)
+        return
+    elseif not (pos and lid and gid) then
+        callstack()
+        printe("!ERROR: invalid parameter for alife():create!",sec)
+        return
+    end
+    local se_obj
+    if state then
+        se_obj = alife():create_local(sec, pos, lid, gid, id, state)
+    elseif id then
+        se_obj = alife():create_local(sec, pos, lid, gid, id)
+    else
+        se_obj = alife():create_local(sec, pos, lid, gid)
+    end
+    if not se_obj then
+        printe("!ERROR: alife_create | failed to create object [%s]!",sec)
+    else
+        alife_record(se_obj, true)
+        return se_obj
+    end
+end
+_G.alife_release_full = function (se_obj, msg)
+    if not se_obj then
+        callstack()
+        printe("!ERROR: alife_release | no server object!")
+        return nil
+    end
+
+    if se_obj and (type(se_obj.id) == "function") then
+        se_obj = alife_object(se_obj:id())
+    end
+
+    if msg then
+        printf("~ alife_release [%s] (%s) | %s", se_obj:section_name(), se_obj.id, msg)
+    end
+
+    -- Walkaround for unregisted server objects callbacks for objects that can't be used at the moment for class registor
+    local cls = se_obj:clsid()
+    local class = ini_sys:r_string_ex(se_obj:section_name(),"class") or ""
+    if _ALIFE_UNREGISTER[class] then
+        SendScriptCallback("server_entity_on_unregister", se_obj, _ALIFE_UNREGISTER[class])
+    end
+    alife_record(se_obj, false)
+    alife():release_local(se_obj, true)
+    return true
+end
+_G.alife_release_client = function (se_obj, msg)
+    if IIsHost() then alife_release(se_obj, msg) end
+    if not se_obj then
+        callstack()
+        printe("!ERROR: alife_release | no server object!")
+        return nil
+    end
+
+    if se_obj and (type(se_obj.id) == "function") then
+        se_obj = alife_object(se_obj:id())
+    end
+    GameManager:OnEntityDespawned(se_obj, true)
+end
+_G.alife_release_client_id = function (se_obj, msg)
+    alife_release_client_id(se_obj, msg)
+end
+_G.alife_release_full_id = function (id, msg)
+    alife_release_full(alife_object(id), msg)
+end
+_G.ForceSave = function ()
+    local force_pause
+    if not (device():is_paused()) then
+        device():pause(true)
+        force_pause = true
+    end
+    local hours = level.get_time_hours()
+    local mins = level.get_time_minutes()
+    local aname = MPMain_STOGETHER.GameManager:GetNickName()
+    exec_console_cmd("save "..tostring(level.name()).." "..tostring(hours).."-"..tostring(mins).."_client_"..tostring(aname))
+    if force_pause then
+        device():pause(false)
+    end
+    return true
+end
+_G.MRessurectMyCharacter = function ()
+    db.actor:set_health_ex(1)
+	db.actor.power = 1
+	db.actor.radiation = 0
+	db.actor.bleeding = 1
+	db.actor.satiety = 1
+	db.actor.psy_health = 1
+	if arszi_psy then arszi_psy.set_psy_health(1.0) end
+	if bind_stalker_ext then bind_stalker_ext.invulnerable_time = time_global() + 10000 end
+	IDead = false
+    GameManager:OnICustomAnimation("waunded_1_idle_0", "", true, 1)
+end
+_G.ShowConnectionError = function(i_nahuya_ona_tebe)
+    WaitMe = i_nahuya_ona_tebe
+end
+function RestoreValues()
+    log("=== [RELOADING PROPERTIES] ===")
+    log("MP-WERASIK2AA: 2.0 Build 348")
+    SyncGivenItems = ui_mcm and ui_mcm.get("werasik2aa/sync_given_i") and true or false
+    SyncGivenMoney = ui_mcm and ui_mcm.get("werasik2aa/sync_given_m") and true or false
+    ShowMarks = ui_mcm and ui_mcm.get("werasik2aa/show_marks") and true or false
+    ShowNames = ui_mcm and ui_mcm.get("werasik2aa/show_name") and true or false
+    ClearInvOnDeath = ui_mcm and ui_mcm.get("werasik2aa/clear_inv") or false
+    DropInvOnDeath = ui_mcm and ui_mcm.get("werasik2aa/drop_inv") or false
+    MaxPlayers = ui_mcm and ui_mcm.get("werasik2aa/max_players") or 3
+    FriendlyFire = ui_mcm and ui_mcm.get("werasik2aa/friendly_fire") or false
+    ChatKeyBind = ui_mcm and ui_mcm.get("werasik2aa/p2p_peer_chat") or DIK_keys.DIK_RMENU
+    --SETTUP PREFERENCES
+    GameManager:SetMaxPlayers(MaxPlayers)
+    GameManager:SetFriendFire(FriendlyFire)
+end
+function PerformRespawnTaskObjects(tma)
+    if IIsHost() then
+        CreateTimeEvent(0, "RESPAWN_TASK_OBJ", 1, function ()
+            local se = tma.current_target and alife_object(tma.current_target)
+            local smrt = tma.current_target and SIMBOARD.smarts[tma.current_target]
+            if se then
+                if not simulation_objects.is_on_the_same_level(se, alife():actor()) then
+                    if IsSquad(se) then
+                        for k in se:squad_members() do
+                            local se_obj = k.object or alife_object(k.id)
+                            if se_obj then
+                                GameManager:OnEntitySpawned(se_obj)
+                            end
+                        end
+                    elseif smrt then
+                        for sq_id,_ in pairs(smrt.squads) do
+                            local squad = alife_object(sq_id)
+                            if squad then
+                                for k in squad:squad_members() do
+                                    local se_obj = k.object or alife_object(k.id)
+                                    if se_obj then
+                                        GameManager:OnEntitySpawned(se_obj)
+                                    end
+                                end
+                            end
+                        end
+                    else
+                        GameManager:OnEntitySpawned(se)
+                    end
+                end
+                GameManager:OnIGetTask(tma.t, tma.current_title or "", tma.current_descr or "", tma.task_giver_id or 65535, tma.stage, false)
+                return true
+            end
+        end)
+    end
+end
+--PATCH GAME 
+MPMain_GamePatches_STOGETHER.Patch()
+if not GameManager:GetFlag() then MPMain_Client_STOGETHER.Patch() else MPMain_Server_STOGETHER.Patch() end

@@ -1,0 +1,87 @@
+--[[
+[================]
+C++ Programmer & Author: Werasik2aa
+Project Creator: Monokit
+Description: Main game patches. Basic anomaly functions and other things.
+Used to patch anomaly 1.5.3 script files.
+[================]
+--]]
+local GameManager = SteamGameManager()
+function Patch()
+    function bind_stalker.actor_binder:on_item_take (obj)
+        level_tasks.proceed(self.object)
+        SendScriptCallback("actor_on_item_take", obj)
+    end
+    function bind_stalker.actor_binder:on_item_drop (obj)
+        level_tasks.proceed(self.object)
+        SendScriptCallback("actor_on_item_drop", obj)
+    end
+    function bind_stalker.actor_binder:net_spawn(data)
+        printf("actor net spawn")
+        level.show_indicators()
+        self.bCheckStart = true
+        self.weapon_hide = false -- спрятано или нет оружие при разговоре.
+        weapon_hide = false -- устанавливаем глобальный дефолтовый флаг.
+        if object_binder.net_spawn(self,data) == false then
+            return false
+        end
+        db.add_actor(self.object)
+        if self.st.disable_input_time == nil then
+            level.enable_input()
+        end
+        self.weather_manager:reset()
+        if(actor_stats.add_to_ranking~=nil)then
+            actor_stats.add_to_ranking(self.object:id())
+        end
+        --' Загружаем настройки дропа
+        death_manager.init_drop_settings()
+        SendScriptCallback("on_game_load")
+        return true
+    end
+    _G.vec_to_str = function(vector) -- переводит вектор в строку.
+        if vector == nil then return "nil" end
+        return string.format("[%s:%s:%s]", vector.x, vector.y, vector.z)
+    end
+    _G.printf = function(fmt,...) -- formatted logging
+        if not (fmt) then return end
+        local fmt = tostring(fmt)
+        if (select('#',...) >= 1) then
+            local i = 0
+            local p = {...}
+            local function sr(a)
+                i = i + 1
+                if (type(p[i]) == 'userdata') then
+                    if (p[i].x and p[i].y) then
+                        return vec_to_str(p[i])
+                    end
+                    return 'userdata'
+                end
+                return tostring(p[i])
+            end
+            fmt = string.gsub(fmt,"%%s",sr)
+        end
+        log(fmt)
+    end
+    function bind_stalker.actor_binder:net_destroy()
+        if(actor_stats.remove_from_ranking~=nil)then
+            actor_stats.remove_from_ranking(self.object:id())
+        end
+        db.del_actor(self.object)
+        sr_light.clean_up()
+        self.object:set_callback(callback.inventory_info, nil)
+        self.object:set_callback(callback.article_info, nil)
+        self.object:set_callback(callback.on_item_take, nil)
+        self.object:set_callback(callback.on_item_drop, nil)
+        self.object:set_callback(callback.task_state, nil)
+        self.object:set_callback(callback.level_border_enter, nil)
+        self.object:set_callback(callback.level_border_exit, nil)
+        self.object:set_callback(callback.take_item_from_box, nil)
+        if sr_psy_antenna.psy_antenna then
+            sr_psy_antenna.psy_antenna:destroy()
+            sr_psy_antenna.psy_antenna = false
+        end
+        xr_sound.stop_all_sound_object()
+        object_binder.net_destroy(self)
+        SendScriptCallback("actor_on_net_destroy")
+    end
+end

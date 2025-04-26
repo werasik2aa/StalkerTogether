@@ -1,0 +1,69 @@
+<string_table>
+    <string id="ui_mcm_werasik2aa_show_marks">
+		<text>Показывать метки на игроках</text>
+	</string>
+    <string id="ui_mcm_werasik2aa_show_name">
+		<text>Показывать имена возле меток</text>
+	</string>
+    <string id="ui_mcm_werasik2aa_clear_inv">
+		<text>Очищать инвентарь после смерти</text>
+	</string>
+	<string id="ui_mcm_werasik2aa_drop_inv">
+		<text>Сбрасывать вещи после смерти</text>
+	</string>
+    <string id="ui_mcm_werasik2aa_sync_given_i">
+		<text>Синхронизировать получаемые предметы за задание</text>
+	</string>
+    <string id="ui_mcm_werasik2aa_max_players">
+		<text>[Сервер] Максимальное колличество игроков</text>
+	</string>
+	<string id="ui_mcm_werasik2aa_friendly_fire">
+		<text>[Сервер] Огонь по своим</text>
+	</string>
+	<string id="ui_mcm_werasik2aa_p2p_peer_chat">
+		<text>Клавиша открытия чата</text>
+	</string>
+	<string id="ui_radmp_title">
+		<text>Anomaly Together 2.0</text>
+	</string>
+    <string id="ui_mcm_menu_werasik2aa">
+		<text>Anomaly Together</text>
+	</string>
+	<string id="st_cap_check_warfarem">
+		<text>Война группировок (BETA)</text>
+	</string>
+
+	<string id="ui_mm_host_port">
+		<text>Айпи сервера</text>
+	</string>
+    <string id="ui_mm_user_name">
+		<text>Никнейм:</text>
+	</string>
+	<string id="ui_mm_newgames">
+		<text>Новый профиль</text>
+	</string>
+	<string id="ui_mm_createserver">
+		<text>Выбор профиля</text>
+	</string>
+	<string id="ui_cons_failed">
+		<text>Не удалось подключиться к серверу, сервер не отправил пакеты за требуемое время. Timed Out</text>
+	</string>
+	<string id="ui_cons_failed_kick">
+		<text>Вас кикнули с сервера</text>
+	</string>
+	<string id="ui_mm_resc_con_game">
+		<text>Возродиться</text>
+	</string>
+	<string id="ui_mm_conn_to_game">
+		<text>Подключится по IP</text>
+	</string>
+	<string id="ui_mm_load_game">
+		<text>Выбор профиля</text>
+	</string>
+	<string id="ui_st_connecting_to_server">
+		<text>Пожалуйста подождите, идет подключение к серверу...</text>
+	</string>
+	<string id="ui_mm_ads_game">
+		<text>Техподдержка в Discord</text>
+	</string>
+</string_table>
