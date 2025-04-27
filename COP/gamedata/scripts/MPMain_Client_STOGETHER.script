@@ -1,0 +1,20 @@
+--[[
+[================]
+C++ Programmer & Author: Werasik2aa
+Project Creator: Monokit
+Description: Patch for client things. Like spawn quest item or block spawn some objects.
+Here patches only for client! Which not hosted game!
+[================]
+--]]
+local GameManager = SteamGameManager()
+function Patch()
+    if alife() then
+        alife().create = function (sec, pos, lv, gv, id, sta)
+            if id then
+                alife():create_local(sec, pos, lv, gv, id, sta)
+            end
+        end
+    end
+    function sim_squad_scripted.sim_squad_scripted:sim_available()
+    end
+end

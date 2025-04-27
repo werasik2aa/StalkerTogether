@@ -1,0 +1,342 @@
+--[[
+[================]
+C++ Programmer & Author: Werasik2aa
+Project Creator: Monokit
+Description: Client Callbacks.
+[================]
+--]]
+function OnConnectFail()
+    log1("[Client] Server not found...")
+end
+function OnConnected(server_name, MyRemoteNetID)
+    log1("[Client] Server found...")
+    log1("[Client] Lua ServerName: "..tostring(server_name))
+    log1("[Client] Lua MyID: "..tostring(MyRemoteNetID))
+    if level.present() then
+        log1("[Client] Stage 3 : Sending our player data")
+        local mss = "Connected to server as"
+        if IIsHost() then
+            news_manager.send_tip(db.actor, mss.." host!", 2000)
+        else
+            news_manager.send_tip(db.actor, mss.." client!", 2000)
+        end
+        MPMain_STOGETHER.GameManager:OnILoaded()
+    else
+        MPMain_STOGETHER.WaitMe = 99
+    end
+end
+
+function OnPlayerConnected(PlayerNetID, SE_OBJ, nickname, level_name)
+    if not SE_OBJ or type(SE_OBJ) == "number" then return end
+    log1("[Client] On Player Connected")
+    log1("[Client] ObjectID: "..(SE_OBJ and tostring(SE_OBJ.id) or "NOT_SPAWNED"))
+    log1("[Client] NetID: "..tostring(PlayerNetID))
+    if db.actor then
+        local mss = "Player "..tostring(nickname).." connected to level: "..tostring(level_name)
+        news_manager.send_tip(db.actor, mss, 2000)
+    end
+    if SE_OBJ then
+        log1("[Client] Adding map point. Adding to list for player marks handler")
+        MPPlayerMarker_STOGETHER.AddEntity(SE_OBJ.id, nickname)
+    end
+end
+function OnPlayerChangedLevel(PlayerNetID, SE_OBJ, NickName)
+    if not SE_OBJ then return end
+    log1("[Client] On Player Changed Level")
+    log1("[Client] NetID: "..tostring(PlayerNetID))
+    if db.actor then
+        local mss = "Player "..tostring(NickName).." changing level"
+        news_manager.send_tip(db.actor, mss, 2000)
+    end
+    if SE_OBJ then
+        log1("[Client] Removing map point. Removing player from marks handler")
+        MPPlayerMarker_STOGETHER.RemoveEntity(SE_OBJ.id)
+    end
+end
+function OnPlayerDisconnected(PlayerNetID, SE_ID, nickmame)
+    log1("[Client] On Player Disconnected")
+    log1("[Client] NetID: "..tostring(PlayerNetID))
+    if db.actor then
+        local mss = "Player "..tostring(nickmame).." disconnected"
+        news_manager.send_tip(db.actor, mss, 2000)
+    end
+    if SE_ID == 0 then return end
+    log1("[Client] Removing map point. Removing player from marks handler")
+    MPPlayerMarker_STOGETHER.RemoveEntity(SE_ID)
+end
+
+function OnPlayerDropPush(PlayerNetID, SE_OBJ)
+    if not SE_OBJ then return end
+    log1("[Client] On Player Drop")
+    log1("[Client] NET PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] ObjectID: "..tostring(SE_OBJ.id))
+end
+
+function OnPlayerShoot(PlayerNetID, SE_OBJ, typeF)
+    if not SE_OBJ then return end
+    --log1("[Client] On Player Shoot")
+    --log1("[Client] NET PlayerID: "..tostring(PlayerNetID))
+    --log1("[Client] ObjectID: "..tostring(SE_OBJ.id))
+end
+
+function OnPlayerEntityHit(PlayerNetID, OBJ, Amount)
+    log1("[Client] On Player Entity Hit")
+    log1("[Client] NET PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] ObjectID: "..tostring(OBJ:id()))
+    log1("[Client] Amount: "..tostring(Amount))
+end
+
+function OnPlayerJump(PlayerNetID, typeF)
+    log1("[Client] On Player Jump")
+    log1("[Client] NET PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] ObjectID: "..tostring(typeF))
+end
+
+function OnPlayerReload(PlayerNetID, typeF)
+    log1("[Client] On Player Reload")
+    log1("[Client] NET PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] ObjectID: "..tostring(typeF))
+end
+
+function OnPlayerChatted(PlayerNetID, NickName, MSG)
+    log1("[Client] On Player Chat")
+    log1("[Client] PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] PlayerNA: "..tostring(NickName))
+    log1("[Client] SMessage: "..tostring(MSG))
+    local mss = NickName.."> "..tostring(MSG)
+    news_manager.send_tip(db.actor, mss, 2000)
+    local mchatclass = MChatbox_STOGETHER.GetChatBox()
+    if mchatclass then
+        mchatclass:AddMessage(mss)
+    end
+end
+
+function OnPlayerUse(PlayerNetID, s_name)
+    log1("[Client] On Player Use")
+    log1("[Client] NET PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] ObjectID: "..tostring(s_name))
+end
+
+function OnPlayerInteract(PlayerNetID, SE_OBJ)
+    if not SE_OBJ then return end
+    log1("[Client] On Player Interact")
+    log1("[Client] NET PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] ObjectID: "..tostring(SE_OBJ.id))
+end
+
+function OnPlayerCustomAnimation(PlayerNetID, Animation, Item, Delay, Force, obj_id)
+    log1("[Client] OnPlayerCustomAnimation")
+    log1("[Client] NET PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] Animation: "..tostring(Animation))
+    log1("[Client] Section: "..tostring(Item))
+    log1("[Client] Delay: "..tostring(Delay))
+    log1("[Client] Force: "..tostring(Force))
+    if obj_id == 65535 then return end
+    CreateTimeEvent(obj_id, "DEATTACH_FUCK_FROM_ASS", Delay, function ()
+        local obj = level.object_by_id(obj_id)
+        if obj then
+            log1("[Client] Deattach spawned item: "..tostring(obj_id))
+            _ = obj.enable_attachable_item and obj:enable_attachable_item(false)
+            local sobj = alife_object(obj_id)
+            if sobj then alife():release_local(sobj) end
+        end
+        return true
+    end)
+end
+
+function OnPlayerPickup(PlayerNetID, SE_OBJ)
+    if not SE_OBJ then return end
+    log1("[Client] On Player Pickup item")
+    log1("[Client] NET PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] ObjectID: "..tostring(SE_OBJ.id))
+    log1("[Client] ObjectName: "..tostring(SE_OBJ:section_name()))
+end
+
+function OnPlayerChangedWeapon(PlayerNetID, obj_id, s_name)
+    log1("[Client] On Player Changed Weapon")
+    log1("[Client] NET PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] WeaponID: "..tostring(obj_id))
+    log1("[Client] WeaponSE: "..tostring(s_name))
+end
+
+function OnPlayerChangedDevice(PlayerNetID, obj_id, s_name)
+    log1("[Client] On Player Changed Device")
+    log1("[Client] NET PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] DeviceID: "..tostring(obj_id))
+    log1("[Client] DeviceSE: "..tostring(s_name))
+end
+
+function OnPlayerChangedVisual(PlayerNetID, SV_NAME)
+    log1("[Client] On Player Changed Visual")
+    log1("[Client] NET PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] Visual name: "..tostring(SV_NAME))
+end
+
+function OnPlayerInfoPortion(PlayerNetID, info_id, state)
+    log1("[Client] On Player Info Portion")
+    log1("[Client] PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] Info_ID: "..info_id)
+    log1("[Client] Enabled: "..tostring(state))
+end
+
+function OnEntitySpawned(SE_OBJ)
+    if not SE_OBJ then return end
+    log1("[Client] On Entity Spawn")
+    log1("[Client] ObjectID: "..tostring(SE_OBJ.id))
+    MPMain_STOGETHER.AwaitThing = SE_OBJ
+end
+
+function OnEntityDespawned(SE_OBJ)
+    if not SE_OBJ then return end
+    log1("[Client] On Entity Despawn")
+    log1("[Client] ObjectID: "..tostring(SE_OBJ.id))
+    alife_release_full(SE_OBJ)
+end
+
+function OnEntityDead(OBJ)
+    if not OBJ then return end
+    log1("[Client] On Entity Dead")
+    log1("[Client] ObjectID: "..tostring(OBJ:id()))
+end
+function OnPlayerTaskUpdate(PlayerNetID, TaskID, TaskGIVER, TaskMID, TaskSTATE, TaskStage)
+    log1("-[Client] ~~~ On Player Task Update ~~~")
+    log1("[Client] PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] TaskID: "..tostring(TaskID))
+    log1("[Client] Giver_ID: "..tostring(TaskGIVER))
+    log1("[Client] MapObject_ID: "..tostring(TaskMID))
+    log1("[Client] Task_State: "..tostring(TaskSTATE))
+    log1("[Client] Task_Stage: "..tostring(TaskStage))
+    local tm = task_manager.get_task_manager()
+    if tm.task_info[TaskID] then
+        tm.task_info[TaskID].current_target = TaskMID
+        tm.task_info[TaskID].task_giver_id = TaskGIVER
+        tm.task_info[TaskID].stage = TaskStage
+        if TaskSTATE == task.completed then
+            tm.task_info[TaskID].forced_status = "complete"
+        elseif TaskSTATE == task.fail then
+            tm.task_info[TaskID].forced_status = "fail"
+        end
+    end
+end
+
+function OnPlayerTaskGive(PlayerNetID, TaskID, TaskGIVER, TaskMID, TaskSTATE, TaskStage)
+    log1("-[Client] ~~~ On Player Task Give ~~~")
+    log1("[Client] PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] TaskID: "..tostring(TaskID))
+    log1("[Client] Giver_ID: "..tostring(TaskGIVER))
+    log1("[Client] MapObject_ID: "..tostring(TaskMID))
+    log1("[Client] Task_State: "..tostring(TaskSTATE))
+    log1("[Client] Task_Stage: "..tostring(TaskStage))
+    local tm = task_manager.get_task_manager()
+    -- GIVE TASK
+    Msg("[Client] Searching phrase id!")
+    local PhraseID = 0
+    for k, v in pairs(tm.task_id_by_yes_phrase_id) do
+        if v == TaskID then
+            Msg("[Client] Found: "..tostring(k))
+            PhraseID = k
+            break
+        end
+    end
+    tm:action_give_task_client(db.actor, TaskGIVER, "USELESS", TaskID, PhraseID)
+    -- UPDATE TASK
+    if tm.task_info[TaskID] then
+        tm.task_info[TaskID].current_target = TaskMID
+        if TaskSTATE == task.completed then
+            tm.task_info[TaskID].forced_status = "complete"
+        elseif TaskSTATE == task.fail then
+            tm.task_info[TaskID].forced_status = "fail"
+        end
+        tm.task_info[TaskID].stage = TaskStage
+        tm.task_info[TaskID].task_giver_id = TaskGIVER
+        if tm.task_info[TaskID].t then
+            tm.task_info[TaskID].t:change_map_location(tm.task_info[TaskID].spot, TaskMID)
+        end
+    end
+end
+function OnForcedTaskState(PlayerNetID, TaskID, TaskState)
+    log1("-[Client] ~~~ On Forced Task State ~~~")
+    log1("[Client] PlayerID: "..tostring(PlayerNetID))
+    log1("[Client] TaskID: "..tostring(TaskID))
+    log1("[Client] TaskState: "..tostring(TaskState))
+    local tm = task_manager.get_task_manager()
+    if tm.task_info[TaskID] then
+        tm.task_info[TaskID].forced_status = TaskState
+    end
+end
+function OnPlayerOpenDoor(PlayerNetID, DoorID, State)
+    local to = db.storage[DoorID]
+    local door = to and to.ph_door and to.ph_door.door_action
+    if not door or not door.open_door or not door.close_door then
+        callstack()
+        log1("[Client] THIS DOOR DOESN'T EXIST")
+        return
+    end
+    -- get_wrapper of furniture? Just use this callback
+    log1("[Client] Player with NetID "..tostring(PlayerNetID).." Used doorID"..tostring(DoorID))
+    if State then
+        door:open_door(false)
+    else
+        door:close_door(false)
+    end
+end
+function OnPlayerSwitchButton(PlayerNetID, ButtonID)
+    local to = db.storage[ButtonID]
+    local button = to and to.ph_button and to.ph_button.button_action
+    if not button or not button.use_callback then
+        callstack()
+        log1("[Client] THIS BUTTON DOESN'T EXIST")
+        return
+    end
+    log1("[Client] Player with NetID "..tostring(PlayerNetID).." Used doorID"..tostring(ButtonID))
+    button:try_switch()
+end
+function OnPlayerCampfire(PlayerNetID, CFireID, State)
+    local obj_c = level.object_by_id(CFireID)
+    obj_c = obj_c and obj_c.get_campfire and obj_c:get_campfire()
+    if not obj_c then
+        callstack()
+        log1("[Client] THIS Campfire DOESN'T EXIST")
+        return
+    end
+    log1("[Client] Player with NetID "..tostring(PlayerNetID).." Used CampfireID"..tostring(CFireID))
+    if State then
+        obj_c:turn_on()
+    else
+        obj_c:turn_off()
+    end
+end
+function OnPlaySound(Sound_Name, Position, NPID)
+    local snd = sound_object(Sound_Name)
+    if not snd then
+        log1("![Client] Failed to play sound by path: "..tostring(Sound_Name))
+        return
+    end
+    log1("[Client] Playing sound: "..tostring(Sound_Name))
+    local obj = level.object_by_id(NPID)
+    if obj then
+        snd:play_no_feedback(obj, 0, 0, Position, 1.0, 1.0)
+    else
+        snd:play_no_feedback(db.actor, 0, 0, Position, 1.0, 1.0)
+    end
+end
+function OnPlayerGetReward(PlayerNetID, Num)
+    log1("=[Client] On Player Get Reward")
+    log1("=[Client] PlayerID: "..tostring(PlayerNetID))
+    db.actor:give_money(Num)
+end
+function OnPlayerWantCompanion(PlayerNetID, id)
+    local npc = level.object_by_id(id)
+    local squad = npc and get_object_squad(npc)
+    if not (squad) then
+        return
+    end
+    axr_companions.companion_squads[squad.id] = squad
+    SIMBOARD:assign_squad_to_smart(squad, nil)
+    for k in squad:squad_members() do
+        local member = db.storage[k.id] and db.storage[k.id].object
+        if ( member and member:alive() ) then
+            axr_companions.add_to_actor_squad(member)
+        end
+    end
+end

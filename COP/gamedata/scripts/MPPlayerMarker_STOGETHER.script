@@ -1,0 +1,111 @@
+--[[
+[================]
+C++ Programmer & Author: Werasik2aa
+Project Creator: Monokit
+Description: Player marks. There's nothing to say.
+[================]
+--]]
+HUD_MP = nil
+function AddEntity(id, oname)
+	--level.map_add_object_spot(id, "companion_spot", tostring(oname))
+	if not HUD_MP then
+		HUD_MP = ui_player_marker()
+		get_hud():AddDialogToRender(HUD_MP)
+	end
+	HUD_MP:AddEntity(id)
+end
+function RemoveEntity(id)
+	--level.map_remove_object_spot(id, "companion_spot")
+	if not HUD_MP then
+		HUD_MP = ui_player_marker()
+		get_hud():AddDialogToRender(HUD_MP)
+	end
+	HUD_MP:RemoveEntity(id)
+end
+
+class "ui_player_marker" (CUIScriptWnd)
+
+function ui_player_marker:__init() super()
+	self:InitControls()
+end
+
+function ui_player_marker:__finalize()
+end
+
+function ui_player_marker:InitControls()
+	self:SetAutoDelete(true)
+	self.xml = CScriptXmlInit()
+	self.xml:ParseFile("ui_player_marker.xml")
+	self.storage = {}
+end
+function ui_player_marker:AddEntity(id)
+	if self.storage[id] then return end
+	self.storage[id] = {}
+	self.storage[id].marker = self.xml:InitStatic("player_marker", self)
+	local txt = CUIStatic()
+	txt:SetAutoDelete(true)
+	txt:SetWindowName("char_2_static")
+	txt:Init("player_marker:nickname",176,95,150,304)
+	self.storage[id].NText = txt
+end
+function ui_player_marker:RemoveEntity(id)
+	if not self.storage[id] then return end
+	self.storage[id].NText:SetText("")
+	self.storage[id].marker:Show(false)
+	self.storage[id] = nil
+end
+function ui_player_marker:GetScreenPos(obj)
+	local pos = utils_obj.safe_bone_pos(obj,"bip01_spine1") or obj:position()
+	pos.y = pos.y + 0.1
+	local vec = pos and game.world2ui(vector():set(pos.x,pos.y,pos.z),false)
+	if vec and vec.x ~= -9999 and vec.y ~= 0 then
+		return vec
+	end
+	return nil
+end
+function ui_player_marker:Update()
+	CUIScriptWnd.Update(self)
+	if not MPMain_STOGETHER.ShowMarks then return end
+	for id, mdata in pairs(self.storage) do
+		local npc = level.object_by_id(id)
+		if npc then
+			--UPDATE EXISTING
+			local InScreenPos = self:GetScreenPos(npc)
+			if InScreenPos then
+				local wpn = db.actor:active_item(db.actor:active_slot())
+				local sc = wpn and wpn:section()
+				if wpn and sc == "device_pda_1" or sc  == "device_pda_2" or sc  == "device_pda_3" then
+					mdata.marker:Show(false)
+					mdata.NText:SetText("")
+					return
+				end
+				mdata.marker:SetWndPos(InScreenPos)
+				mdata.marker:SetWndSize(InScreenPos:set(25, 30))
+				mdata.NText:SetText(MPMain_STOGETHER.ShowNames and npc:character_name() or "")
+				mdata.marker:Show(true)
+			else
+				mdata.NText:SetText("")
+				mdata.marker:Show(false)
+			end
+		else
+			self:RemoveEntity(id)
+		end
+	end
+end
+
+local function Destroy()
+	if HUD_MP then
+		get_hud():RemoveDialogToRender(HUD_MP)
+		HUD_MP = nil
+	end
+end
+function Update()
+	if HUD_MP then
+		HUD_MP:Update(true)
+	end
+end
+function on_game_start()
+	RegisterScriptCallback("actor_on_net_destroy",Destroy)
+	RegisterScriptCallback("GUI_on_show",Update)
+	RegisterScriptCallback("GUI_on_hide",Update)
+end

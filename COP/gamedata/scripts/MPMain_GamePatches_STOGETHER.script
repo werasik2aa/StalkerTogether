@@ -1,0 +1,161 @@
+--[[
+[================]
+C++ Programmer & Author: Werasik2aa
+Project Creator: Monokit
+Description: Main game patches. Basic anomaly functions and other things.
+Used to patch anomaly 1.5.3 script files.
+[================]
+--]]
+local GameManager = SteamGameManager()
+function Patch()
+    function bind_stalker.actor_binder:on_item_take (obj)
+        printf("on_item_take [%s]", obj:name())
+        if isArtefact(obj) then
+            local anomal_zone = bind_anomaly_zone.parent_zones_by_artefact_id[obj:id()]
+            if anomal_zone ~= nil then
+                anomal_zone:on_artefact_take(obj)
+            else
+                bind_anomaly_zone.artefact_ways_by_id[obj:id()] = nil
+            end
+            local artefact = obj:get_artefact()
+            artefact:FollowByPath("NULL",0,vector():set(500,500,500))
+            xr_statistic.inc_founded_artefacts_counter(obj:id())
+        end
+        treasure_manager.get_treasure_manager():on_item_take(obj:id())
+        SendScriptCallback("actor_on_item_take", obj)
+    end
+    function bind_stalker.actor_binder:on_item_drop (obj)
+        SendScriptCallback("actor_on_item_drop", obj)
+    end
+    function bind_stalker.actor_binder:net_spawn(data)
+        --	printf("actor net spawn")
+            level.show_indicators()
+            self.bCheckStart = true
+            self.weapon_hide = false -- спрятано или нет оружие при разговоре.
+            self.weapon_hide_in_dialog = false
+            weapon_hide = {} -- устанавливаем глобальный дефолтовый флаг.
+            if object_binder.net_spawn(self,data) == false then
+                return false
+            end
+            db.add_actor(self.object)
+            db.actor.deimos_intensity = self.deimos_intensity
+            self.deimos_intensity = nil
+            if self.st.disable_input_time == nil then
+                level.enable_input()
+            end
+            xr_s.on_game_load()                                    --' Distemper 03.2008 --
+            self.weather_manager:reset()
+            --' Загружаем настройки дропа
+            death_manager.init_drop_settings()
+            --'Устанавливаем ссылку на таскменеджер
+            self.task_manager = task_manager.get_task_manager()
+            self.spawn_frame = device().frame
+            self.already_jumped = false
+            self.loaded = false
+            --benchmark.main()							          --' Distemper 06.2008 --
+            SendScriptCallback("on_game_load")
+            return true
+        end
+    _G.vec_to_str = function(vector) -- переводит вектор в строку.
+        if vector == nil then return "nil" end
+        return string.format("[%s:%s:%s]", vector.x, vector.y, vector.z)
+    end
+    _G.printf = function(fmt,...) -- formatted logging
+        if not (fmt) then return end
+        local fmt = tostring(fmt)
+        if (select('#',...) >= 1) then
+            local i = 0
+            local p = {...}
+            local function sr(a)
+                i = i + 1
+                if (type(p[i]) == 'userdata') then
+                    if (p[i].x and p[i].y) then
+                        return vec_to_str(p[i])
+                    end
+                    return 'userdata'
+                end
+                return tostring(p[i])
+            end
+            fmt = string.gsub(fmt,"%%s",sr)
+        end
+        log(fmt)
+    end
+    function bind_stalker.actor_binder:net_destroy()
+        xr_sound.stop_sounds_by_id(self.object:id())
+        local board_factions = sim_board.get_sim_board().players
+        if(board_factions) then
+                for k,v in pairs (board_factions) do
+                        xr_sound.stop_sounds_by_id(v.id)
+                end
+        end
+        if(actor_stats.remove_from_ranking~=nil)then
+            actor_stats.remove_from_ranking(self.object:id())
+        end
+        level.show_weapon(true)
+        db.del_actor(self.object)
+    
+        self.object:set_callback(callback.inventory_info, nil)
+        self.object:set_callback(callback.article_info, nil)
+        self.object:set_callback(callback.on_item_take, nil)
+        self.object:set_callback(callback.on_item_drop, nil)
+        self.object:set_callback(callback.task_state, nil)
+        self.object:set_callback(callback.level_border_enter, nil)
+        self.object:set_callback(callback.level_border_exit, nil)
+        self.object:set_callback(callback.take_item_from_box, nil)
+        self.object:set_callback(callback.use_object, nil)
+    
+        log("--------->"..tostring(_G.amb_vol))
+        log("--------->"..tostring(_G.mus_vol))
+        if(_G.amb_vol~=0) then
+            get_console():execute("snd_volume_eff "..tostring(_G.amb_vol))
+            _G.amb_vol = 0
+        end
+        if(_G.mus_vol~=0) then
+            get_console():execute("snd_volume_music "..tostring(_G.mus_vol))
+            _G.mus_vol = 0
+        end
+        if sr_psy_antenna.psy_antenna then
+            sr_psy_antenna.psy_antenna:destroy()
+            sr_psy_antenna.psy_antenna = false
+        end
+        xrs_dyn_music.finish_theme()
+        xr_s.on_actor_destroy()
+        SendScriptCallback("actor_on_net_destroy")
+    end
+    function task_manager.CRandomTask:give_task(task_id, task_giver_id)
+        local dryfear = self.task_info[task_id]
+        self:give_task_client(task_id, task_giver_id)
+        -- SEND NEW ACHIVED TASK IF IT WAS NEW
+        if dryfear then return end
+        local tma = self.task_info[task_id]
+        GameManager:OnIGetTask(tma.t, tma.current_title or "", tma.current_descr or "", tma.task_giver_id or 65535, tma.stage, true)
+        return true
+    end
+    function task_manager.CRandomTask:give_task_client(task_id,task_giver_id)
+        printf("CRandomTask:give_task() task_id[%s]", tostring(task_id))
+        printf("giver_id %s", tostring(task_giver_id))
+
+        if not task_manager.task_ini:section_exist(task_id) then
+            printe("!ERROR There is no task [%s] in task ini_file or ini_file is not included!!!", task_id)
+            return
+        end
+        if (self.task_info[task_id]) then
+            printf("task_manager: ERROR: TASK ALREADY EXISTS!!!")
+            MPMain_STOGETHER.PerformRespawnTaskObjects(self.task_info[task_id])
+            return
+        end
+
+        if USE_MARSHAL then
+            local m_data = alife_storage_manager.get_state()
+            if (m_data.task_objects and m_data.task_objects[task_id]) then
+                printf("task_manager: WARNING: task data already existed for %s",task_id)
+                m_data.task_objects[task_id] = nil
+            end
+        end
+
+        self.task_info[task_id] = task_objects.CGeneralTask(task_id)
+        self.task_info[task_id]:give_task()
+        self.task_info[task_id].task_giver_id = task_giver_id
+        MPMain_STOGETHER.PerformRespawnTaskObjects(self.task_info[task_id])
+    end
+end
