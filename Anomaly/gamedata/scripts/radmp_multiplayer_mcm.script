@@ -9,6 +9,7 @@ function on_mcm_load()
             { id = "clear_inv", type = "check", val = 1, def = false},
             { id = "drop_inv", type = "check", val = 1, def = false},
             { id = "friendly_fire", type = "check", val = 1, def = false},
+            { id = "transvestit_to_level", type = "check", val = 1, def = false},
             { id = "max_players", type = "track", val = 2, min = 1, max = 8, step = 1, def = 3 }
         }
     }

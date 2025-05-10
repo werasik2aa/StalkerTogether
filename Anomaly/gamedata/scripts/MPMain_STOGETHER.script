@@ -21,6 +21,7 @@ ClearInvOnDeath = ui_mcm and ui_mcm.get("werasik2aa/clear_inv") or false
 DropInvOnDeath = ui_mcm and ui_mcm.get("werasik2aa/drop_inv") or false
 MaxPlayers = ui_mcm and ui_mcm.get("werasik2aa/max_players") or 3
 FriendlyFire = ui_mcm and ui_mcm.get("werasik2aa/friendly_fire") or false
+TransferAllToLevel = ui_mcm and ui_mcm.get("werasik2aa/transvestit_to_level") or false
 ChatKeyBind = ui_mcm and ui_mcm.get("werasik2aa/p2p_peer_chat") or DIK_keys.DIK_RMENU
 
 --MAIN SERVER-CLIENT BOOLEANS
@@ -364,21 +365,6 @@ end
 _G.alife_release_full_id = function (id, msg)
     alife_release_full(alife_object(id), msg)
 end
-_G.ForceSave = function ()
-    local force_pause
-    if not (device():is_paused()) then
-        device():pause(true)
-        force_pause = true
-    end
-    local hours = level.get_time_hours()
-    local mins = level.get_time_minutes()
-    local aname = MPMain_STOGETHER.GameManager:GetNickName()
-    exec_console_cmd("save "..tostring(level.name()).." "..tostring(hours).."-"..tostring(mins).."_client_"..tostring(aname))
-    if force_pause then
-        device():pause(false)
-    end
-    return true
-end
 _G.MRessurectMyCharacter = function ()
     db.actor:set_health_ex(1)
 	db.actor.power = 1
@@ -405,6 +391,7 @@ function RestoreValues()
     DropInvOnDeath = ui_mcm and ui_mcm.get("werasik2aa/drop_inv") or false
     MaxPlayers = ui_mcm and ui_mcm.get("werasik2aa/max_players") or 3
     FriendlyFire = ui_mcm and ui_mcm.get("werasik2aa/friendly_fire") or false
+    TransferAllToLevel = ui_mcm and ui_mcm.get("werasik2aa/transvestit_to_level") or false
     ChatKeyBind = ui_mcm and ui_mcm.get("werasik2aa/p2p_peer_chat") or DIK_keys.DIK_RMENU
     --SETTUP PREFERENCES
     GameManager:SetMaxPlayers(MaxPlayers)

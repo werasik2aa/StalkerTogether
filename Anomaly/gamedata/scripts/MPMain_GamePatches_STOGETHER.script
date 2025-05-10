@@ -9,11 +9,11 @@ Used to patch anomaly 1.5.3 script files.
 local GameManager = SteamGameManager()
 function Patch()
     log("[GameManager] Patching task, game scripts and other shit. For MultiPlayer actions sync")
-    function bind_stalker.actor_binder:save_state(m_data)
-        if not self.object or self.object:id() ~= 0 then
-            UnregisterScriptCallback("save_state", self)
-            return
-        end
+    	function bind_stalker.actor_binder:save_state(m_data)
+		if self.object:id() ~= 0 then
+			UnregisterScriptCallback("save_state",self)
+			return
+		end
 		--utils_data.debug_write(strformat("actor_binder:save_state BEFORE"))
 		local state = alife_storage_manager.get_game_object_state(self.object,true)
 		if not (state.actor_binder) then
@@ -37,7 +37,7 @@ function Patch()
 		level_weathers.get_weather_manager():save_state(m_data)
 		surge_manager.save_state(m_data)
 		psi_storm_manager.save_state(m_data)
-		db.storage[self.object:id()].pstor = db.storage[self.object:id()].pstor or {}
+		db.storage[0].pstor = db.storage[0].pstor or {}
 		--utils_data.debug_write(strformat("actor_binder:save_state AFTER"))
 	end
     if MPMain_STOGETHER.SyncGivenItems then

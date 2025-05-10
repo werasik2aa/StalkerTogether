@@ -7,6 +7,7 @@ Description: CALLING CALLBACKS! LIKE IDEAD IPICKUP E.T.C
 --]]
 local GameManager = SteamGameManager()
 local function on_game_load()
+    if MPMain_STOGETHER.GameLoaded then return end
     local se_actor = alife():actor()
     if GameManager:GetFlag() then
         if se_actor then
@@ -23,38 +24,12 @@ local function on_game_load()
 end
 local function actor_on_first_update()
     if MPMain_STOGETHER.GameLoaded then return end
-    CreateTimeEvent(0, "SPAWN_DONE", 3, function ()
-        MPMain_STOGETHER.GameLoaded = true
-        GameManager:SetGameLoaded(true)
-        return true
-    end)
+    MPMain_STOGETHER.GameLoaded = true
+    GameManager:SetGameLoaded(true)
     GameManager:SetTestMyClient(false)
     GameManager:OnRequest()
-end
-local function zombie_mod(obj, sobj)
-    if sobj and IsStalker(nil, sobj:clsid()) and not IsActor(sobj) then
-        local sec = random_choice("jup_b19_zombied_2",
-        "sim_default_zombied_1",
-        "sim_default_zombied_2",
-        "sim_default_zombied_3", "sim_default_zombied_4",
-        "jup_b19_zombied_1",
-        "zombi_babka_1", "zombi_babka_2", "zombi_babka_3",
-        "zombi_x3", "zombi_x4", "zombi_9",
-        "zombie_blind",
-        "zombie_fake",
-        "zombie_wich",
-        "zombie_teta",
-        "zombie_weak",
-        "zombie_strong",
-        "zombie_normal",
-        "zombie_ghol",
-        "zombie_ghost")
-        if sobj.position:distance_to(db.actor:position()) > 10 then
-            local sobj2 = alife_create(sec, sobj.position, sobj.m_level_vertex_id, sobj.m_game_vertex_id)
-            GameManager:OnEntitySpawned(sobj2)
-        end
-        alife_release(sobj)
-        return
+    if MPMain_STOGETHER.TransferAllToLevel then
+        GameManager:ForceChangeLevelAll(db.actor:position(), db.actor:game_vertex_id(), db.actor:level_vertex_id(), VEC_ZERO)
     end
 end
 local function on_key_press(key)
@@ -155,4 +130,5 @@ function on_game_start()
     RegisterScriptCallback("monster_on_loot_init", monster_on_loot_init)
     RegisterScriptCallback("actor_on_sleep", actor_on_sleep)
     RegisterScriptCallback("actor_on_item_put_in_box", actor_on_item_put_in_box)
+    RegisterScriptCallback("on_option_change", MPMain_STOGETHER.RestoreValues)
 end

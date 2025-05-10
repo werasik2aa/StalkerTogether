@@ -20,6 +20,9 @@
 	<string id="ui_mcm_werasik2aa_friendly_fire">
 		<text>[Сервер] Огонь по своим</text>
 	</string>
+	<string id="ui_mcm_werasik2aa_transvestit_to_level">
+		<text>[Сервер] Переносить игроков на другой уровень</text>
+	</string>
 	<string id="ui_mcm_werasik2aa_p2p_peer_chat">
 		<text>Клавиша открытия чата</text>
 	</string>

@@ -138,6 +138,7 @@ function main_menu:OnButton_ReLoad_clicked()
 	self.load_dlg:ShowDialog(true)
 	self:HideDialog()
 	self:Show(false)
+	self.mbox_mode = 5
 end
 
 function main_menu:Update()
@@ -173,6 +174,8 @@ function main_menu:Update()
 			log("[Client] Openning existing save loader")
 			self:OnButton_ReLoad_clicked()
 		end
+	else
+		MPMain_STOGETHER.GameManager:ManualServerUpdate()
 	end
 end
 

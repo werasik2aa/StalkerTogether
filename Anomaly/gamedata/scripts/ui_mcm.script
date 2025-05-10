@@ -2103,7 +2103,7 @@ function UI_MCM:OnButton_Reset()
 			self:UpdatePending()
 			self:Reset_opt(self.last_curr_tree, self.last_path)
 			print_dbg("% Sent callback (mcm_option_reset)")
-			SendScriptCallback(mcm_option_reset)
+			SendScriptCallback("mcm_option_reset")
 		end
 	end
 	
@@ -2114,7 +2114,7 @@ function UI_MCM:OnButton_Default()
 	if self.last_path and self.last_curr_tree then
 		self:Reset_opt(self.last_curr_tree, self.last_path, { def = true })
 		print_dbg("% Sent callback (mcm_option_restore_default)")
-		SendScriptCallback(mcm_option_restore_default)
+		SendScriptCallback("mcm_option_restore_default")
 	end
 	
 
@@ -2283,7 +2283,7 @@ function UI_MCM:On_Discard()
 		self:UpdatePending()
 		self:Reset_opt(self.last_curr_tree, self.last_path)
 		print_dbg("% Sent callback (mcm_option_discard)")
-		SendScriptCallback(mcm_option_discard)
+		SendScriptCallback("mcm_option_discard")
 	end
 	self:On_Cancel()
 end

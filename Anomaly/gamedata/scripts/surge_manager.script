@@ -1032,7 +1032,7 @@ function CSurgeManager:update()
 								print_dbg('diff_sec>=%s | hit actor 2',diff_sec)
 			                	db.actor:hit(h)
 			                end
-							self.stages['1stwavehit']=true
+							self.stages['1stwavehit']=true;
 							--self.debugMessages[2]:SetText("first wave hit at: "..tostring(diff_sec)..' with strength: '..h.power)
 						end
 						

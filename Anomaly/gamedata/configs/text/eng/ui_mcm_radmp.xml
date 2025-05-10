@@ -20,6 +20,9 @@
 	<string id="ui_mcm_werasik2aa_friendly_fire">
 		<text>[Сервер] Friendly fire</text>
 	</string>
+		<string id="ui_mcm_werasik2aa_transvestit_to_level">
+		<text>[Сервер] Transfer players on another level along the host</text>
+	</string>
 	<string id="ui_radmp_title">
 		<text>Anomaly Together 2.0</text>
 	</string>

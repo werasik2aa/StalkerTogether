@@ -61,8 +61,12 @@ function ui_player_marker:GetScreenPos(obj)
 end
 function ui_player_marker:Update()
 	CUIScriptWnd.Update(self)
-	if not MPMain_STOGETHER.ShowMarks then return end
 	for id, mdata in pairs(self.storage) do
+		if not MPMain_STOGETHER.ShowMarks then
+			mdata.marker:Show(false)
+			mdata.NText:SetText("")
+			return
+		end
 		local npc = level.object_by_id(id)
 		if npc then
 			--UPDATE EXISTING
