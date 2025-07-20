@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="ISO-8859-1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+  <title>STALKER Together</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+  <header class="header-area">
+    <nav class="main-nav">
+      <a href="index.html" class="logo">
+        <img src="assets/images/logo.png" alt="">
+      </a>
+      <ul class="nav">
+        <a href="index.html">Home</a>
+        <a href="download.html">Download</a>
+        <a href="media.html">Media</a>
+        <!--a href="addons.html">Addons</a-->
+        <a href="devfaq.html" class="active">For developers</a>
+      </ul>
+    </nav>
+  </header>
+  <div class="content">
+    <!-- BANNER Start -->
+    <div class="main-download-banner">
+      <div class="row">
+        <div class="header-text">
+          <h4>Obtain class from luabind functions</h4>
+          <!-- CLASS G OBTAIN -->
+          <h4></h4>
+          <h2><em>SteamGameManager()</em></h2>
+          This function used to obtain CSteamSocketGameManager class
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example: local GameManager = SteamGameManager()
+
+          <!-- CLASS SS OBTAIN -->
+          <h4></h4>
+          <h2><em>SteamServer()</em></h2>
+          This function used to obtain CSteamSocketServer class
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example: local ServerSOSOCK = SteamServer()
+
+          <!-- CLASS SC OBTAIN -->
+          <h4></h4>
+          <h2><em>SteamClient()</em></h2>
+          This function used to obtain CSteamSocketClient class
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example: local ClientSOSOCK = SteamClient()
+
+          <!-- CLASS P OBTAIN -->
+          <h4></h4>
+          <h2><em>GetPlayerManager()</em></h2>
+          This function used to obtain CSteamSocketGameManager class
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              local PlayerManager = GameManager:GetPlayerManager()
+            }
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- BANNER Start -->
+    <div class="main-download-banner">
+      <div class="row">
+        <div class="header-text">
+          <h4>Spawning and destroying objects functions</h4>
+          <!-- CREATION -->
+          <h2><em>alife_create_client(section, position, lv_id, gv_id, id_parent)</em></h2>
+          This function used to spawn object remotely on host side from client without await him.
+          <br>
+          That send spawn entity request to host. Host spawn object.
+          <br>
+          <br>
+          Example: alife_create_client("box", db.actor:position(), 0, 0)
+
+          <h4></h4>
+          <h2><em>alife_create_awaite(functa, section, position, lv_id, gv_id, id_parent)</em></h2>
+          This function used to spawn object remotely on host side from client with await him.
+          <br>
+          That send spawn entity request to host. Host spawn object. Client catch event and calls functa(se_object)
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              alife_create_awaite(function(se)
+                if se then -- just for?
+                  log("Object box spawned: "..box:section_name())
+                end
+              end, "box", db.actor:position(), 0, 0)
+            }
+            {
+              alife_create_awaite(function(se)
+                if se then -- just for?
+                  log("Object bolt spawned in parent actor")
+                end
+              end, "bolt", VEC_ZERO, 0, 0, db.actor:id())
+            }
+          </pre>
+
+          <!-- DESTROYINGS -->
+          <h4></h4>
+          <h2><em>alife_release_client(se_object)</em></h2>
+          This function used to despawn object remotely on host side from client by se_object
+          <br>
+          That send despawn entity request to host. Host despawn object.
+          <br>
+          <br>
+          Example: alife_release_client(alife_object(55))
+
+          <h4></h4>
+          <h2><em>alife_release_client_id(id)</em></h2>
+          This function used to despawn object remotely on host side from client by id
+          <br>
+          That send despawn entity request to host. Host despawn object.
+          <br>
+          <br>
+          Example: alife_release_client_id(55)
+          <br>
+          <br>
+        </div>
+      </div>
+    </div>
+    <!-- BANNER Start -->
+    <div class="main-download-banner">
+      <div class="row">
+        <div class="header-text">
+          <h4>Player manager functions</h4>
+          <!-- TELEPORT -->
+          <h4></h4>
+          <h2><em>TeleportPlayer(u32 NetID, Fvector Position)</em></h2>
+          This function used to teleport player to position. IT'S HOST ACTION!
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              local PlayerManager = GameManager:GetPlayerManager()
+              local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
+              if pdata then
+                local id = pdata:GetNetID()
+                local pos = db.actor:position()
+                PlayerManager:TeleportPlayer(id, pos)
+              end
+            }
+          </pre>
+          <!-- ADVANCED TELEPORT -->
+          <h4></h4>
+          <h2><em>SendToAnotherLevel(u32 NetID, Fvector Position, u32 gvid, u32 lvid, Fvector Angle)</em></h2>
+          This function used to teleport player to position or level. IT'S HOST ACTION! Advanced
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              local PlayerManager = GameManager:GetPlayerManager()
+              local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
+              if pdata then
+                local id = pdata:GetNetID()
+                local pos = db.actor:position()
+                local lvid = db.actor:level_vertex_id()
+                local gvid = db.actor:game_vertex_id()
+                PlayerManager:SendToAnotherLevel(id, pos, gvid, lvid, db.actor:direction())
+              end
+            }
+          </pre>
+
+          <!-- ACTION kick -->
+          <h4></h4>
+          <h2><em>KickPlayer(u32 NetID)</em></h2>
+          This function used to teleport player to position. IT'S HOST ACTION!
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              local ServerSOSOCK = SteamServer()
+              local PlayerManager = GameManager:GetPlayerManager()
+              local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
+              if pdata then
+                local id = pdata:GetNetID()
+                PlayerManager:KickPlayer(id)
+              else
+                local NETid = ServerSOSOCK:get_player_by_index(1) -- HOST IS 0
+                PlayerManager:KickPlayer(NETid)
+              end
+            }
+          </pre>
+
+          <!-- ACTION HasItem -->
+          <h4></h4>
+          <h2><em>HasItem(LPCSTR name) or HasItem(u32 NETID, LPCSTR name)</em></h2>
+          This function used to sync weather FX with clients.
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              local PlayerManager = GameManager:GetPlayerManager()
+              local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
+              if pdata then
+                local ishas = PlayerManager:HasItem("bolt")
+                if ishas then
+                  log("Someone had item bolt")
+                end
+                local ishas = PlayerManager:HasItem(pdata:GetNetID(), "bolt")
+                if ishas then
+                  log("Player "..pdata:GetNickName().. " has item")
+                end
+              end
+            }
+          </pre>
+
+          <!-- ACTION HasItem -->
+          <h4></h4>
+          <h2><em>HasItem(LPCSTR name) or HasItem(u32 NETID, LPCSTR name)</em></h2>
+          This function used to sync weather FX with clients.
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              local PlayerManager = GameManager:GetPlayerManager()
+              local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
+              if pdata then
+                local ishas = PlayerManager:HasItem("bolt")
+                if ishas then
+                  log("Someone had item bolt")
+                end
+                local ishas = PlayerManager:HasItem(pdata:GetNetID(), "bolt")
+                if ishas then
+                  log("Player "..pdata:GetNickName().. " has item")
+                end
+              end
+            }
+          </pre>
+
+          <!-- ACTION send reward -->
+          <h4></h4>
+          <h2><em>SendRewardTo(u32 TO, u32 FROM, u32 count)</em></h2>
+          This function used to send reward to client from host side.
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              local PlayerManager = GameManager:GetPlayerManager()
+              local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
+              if pdata then
+                local id = pdata:GetNetID()
+                PlayerManager:SendRewardTo(id, 0, 5000) -- sends 5000 to player with netID...
+              end
+            }
+            {
+              local GameManager = SteamGameManager()
+              local PlayerManager = GameManager:GetPlayerManager()
+              local pdata = PlayerManager:GetPlayerData("werasik2aa")
+              if pdata then
+                local id = pdata:GetNetID()
+                PlayerManager:SendRewardTo(id, -1, 5000) -- sends 5000 to player werasik2aa...
+              end
+            }
+          </pre>
+
+          <!-- ACTION send damage -->
+          <h4></h4>
+          <h2><em>SendDamageTo(u32 TO, u32 FROM, u32 count)</em></h2>
+          This function used to send damage to client from host side
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              local PlayerManager = GameManager:GetPlayerManager()
+              local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
+              if pdata then
+                local id = pdata:GetNetID()
+                local shit = hit()
+                ...
+                PlayerManager:SendDamageTo(id, 0, shit)
+              end
+            }
+            {
+              local GameManager = SteamGameManager()
+              local PlayerManager = GameManager:GetPlayerManager()
+              local pdata = PlayerManager:GetPlayerData("werasik2aa")
+              if pdata then
+                local id = pdata:GetNetID()
+                local shit = hit()
+                ...
+                PlayerManager:SendDamageTo(id, 0, shit)
+              end
+            }
+          </pre>
+
+
+          <!-- ACTION get max ping -->
+          <h4></h4>
+          <h2><em>SendRewardTo(u32 TO, u32 FROM, u32 count)</em></h2>
+          This function used to get max ping from array of players. Like the most hight ping...
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example: local PlayerManager:GetMaxPing()
+        </div>
+      </div>
+    </div>
+    <!-- BANNER Start -->
+    <div class="main-download-banner">
+      <div class="row">
+        <div class="header-text">
+          <br>
+          <br>
+          <!-- ACTION time sync -->
+          <h4>Level things sync functions</h4>
+          <h2><em>OnTimeChanged()</em></h2>
+          This function used to sync time with clients.
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              GameManager:OnTimeChanged()
+            }
+          </pre>
+
+          <!-- ACTION weather sync -->
+          <h4></h4>
+          <h2><em>OnWeatherChanged()</em></h2>
+          This function used to sync weather with clients.
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              GameManager:OnWeatherChanged()
+            }
+          </pre>
+
+          <!-- ACTION weather FX sync -->
+          <h4></h4>
+          <h2><em>OnWeatherFXChanged()</em></h2>
+          This function used to sync weather FX with clients.
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              GameManager:OnWeatherFXChanged()
+            }
+          </pre>
+
+          <!-- ACTION Sound sync -->
+          <h4></h4>
+          <h2><em>OnCustomSound(LPCSTR Name, Fvector pos, CSE_Abstract* obj) or OnCustomSound(LPCSTR Name, Fvector pos,
+              u16 obj)</em></h2>
+          This function used to sync sound with clients.
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              xr_effects.play_sound = function (actor, obj, p)
+                  xr_effects.set_sound_play(actor, obj, p)
+                  local sobj = alife_object(obj:id()) or alife():actor()
+                  if not IIsHost() then
+                      GameManager:OnCustomSound(p[1], sobj and sobj.position or vector():set(0, 0, 0), sobj)
+                  end
+              end
+            }
+          </pre>
+
+          <!-- ACTION no entity sync -->
+          <h4></h4>
+          <h2><em>UnregisterObject(CSE_Abstract* se) or UnregisterObject(u16 ID)</em></h2>
+          This function used to prevent sync object. Like se_legs of legs addon
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              local se_obj = alife_object(55)
+              GameManager:UnregisterObject(se_obj)
+              --GameManager:UnregisterObject(5) -- commented but just as Example
+            }
+          </pre>
+
+          <!-- ACTION save acta sync -->
+          <h4></h4>
+          <h2><em>OnSaveGame()</em></h2>
+          This function used to send save action packet to all clients
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              GameManager:OnSaveGame()
+            }
+          </pre>
+
+          <!-- ACTION save acta sync -->
+          <h4></h4>
+          <h2><em>OnEmissionPsy(bool psi, bool state)</em></h2>
+          This function used to send emission started or stopped action. Same for psi-storm
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              GameManager:OnEmissionPsy(false, true) -- start emission
+              GameManager:OnEmissionPsy(false, false) -- stop emission
+            }
+            {
+              local GameManager = SteamGameManager()
+              GameManager:OnEmissionPsy(true, true) -- start psi-storm
+              GameManager:OnEmissionPsy(true, false) -- stop psi-storm
+            }
+          </pre>
+
+          <!-- CUSTOM PACKETS -->
+          <h4></h4>
+          <h2><em>SendToClientCustomPacketFrom, SendToAllCustomPacketFrom, SendToServerCustomPacket, SendToAllCustomPacket</em></h2>
+          This is for Advanced users. Who want to make own packets and things.
+          <br>
+          No further info...
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              -- Server custom packet (NET_Packet)
+              void SendToClientCustomPacketFrom(NET_Packet pak, u32 from, u32 to, u32 flags);
+              void SendToAllCustomPacketFrom(NET_Packet pak, u32 from, u32 flags);
+              void SendToServerCustomPacket(NET_Packet pak, u32 flags);
+
+              -- Client custom packet (NET_Packet)
+              void SendToAllCustomPacket(NET_Packet pak, u32 flags);
+            }
+          </pre>
+        </div>
+      </div>
+    </div>
+    <!-- BANNER Start -->
+    <div class="main-download-banner">
+      <div class="row">
+        <div class="header-text">
+          <!-- req ACTION host hire companion -->
+          <h4>Player client things function</h4>
+          <h2><em>OnIWantCompanion(CSE_ALifeDynamicObject* se) or OnIWantCompanion(u16 id)</em></h2>
+          This function used to trigger host to hire companion - stalker.
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              local se_obj = alife_object(55)
+              GameManager:OnIWantCompanion(se_obj)
+              --GameManager:OnIWantCompanion(55)
+            }
+          </pre>
+
+          <br>
+          <br>
+          <!-- req ACTION host fire companion -->
+          <h4>Player client things function</h4>
+          <h2><em>OnIWantCompanion(CSE_ALifeDynamicObject* se) or OnIWantCompanion(u16 id)</em></h2>
+          This function used to trigger host to fire companion - stalker.
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              local se_obj = alife_object(55)
+              GameManager:OnINoWantCompanion(se_obj)
+              --GameManager:OnINoWantCompanion(55)
+            }
+          </pre>
+
+          <br>
+          <br>
+          <!-- req ACTION host fire companion -->
+          <h4>Player client things function</h4>
+          <h2><em>OnIStashOpen(CSE_ALifeDynamicObject* se) or OnIStashOpen(u16 id)</em></h2>
+          This function used to obtain storage data of alife object. Usefull if used custom_ui and calls on CUIGameSP not working
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              local se_obj = alife_object(55)
+              GameManager:OnIStashOpen(se_obj)
+              --GameManager:OnIStashOpen(55)
+            }
+          </pre>
+
+          <br>
+          <br>
+          <!-- Task GET -->
+          <h4>Player client things function</h4>
+          <h2><em>OnIGetTask(CGameTask* datat, LPCSTR title_nt, LPCSTR descr_nt, u16 TaskGIVER, u16 Stage, bool newa)</em></h2>
+          This function used to obtain storage data of alife object. Usefull if used custom_ui and calls on CUIGameSP not working
+          <br>
+          Check lua_help_mp.lua for understand what you want to do
+          <br>
+          <br>
+          Example:
+          <pre>
+            {
+              local GameManager = SteamGameManager()
+              local tma = task_manager.get_task_manager().task_info[task_id]
+              if not tma then return end
+              GameManager:OnIGetTask(tma.t, tma.current_title or "", tma.current_descr or "", tma.task_giver_id or 65535, tma.stage, true) -- add new quest
+              GameManager:OnIGetTask(tma.t, tma.current_title or "", tma.current_descr or "", tma.task_giver_id or 65535, tma.stage, false) -- upd exist quest
+            }
+          </pre>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- BANNER End -->
+  </div>
+</body>
+
+</html>

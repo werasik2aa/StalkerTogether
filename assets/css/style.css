@@ -1,0 +1,287 @@
+* {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: #fff;
+}
+
+a {
+	color: #CCC;
+  text-decoration: none;
+}
+
+/* 
+---------------------------------------------
+Global Styles
+--------------------------------------------- 
+*/
+
+html, body {
+  background: #1f2122;
+  font-family: 'Poppins', sans-serif;
+}
+
+.content {
+  margin-top: 100px;
+  background-color: #27292a;
+  padding: 60px;
+  border-radius: 23px;
+}
+
+
+.main-button a {
+  font-size: 14px;
+  color: #fff;
+  background-color: #2c2c54;
+  padding: 12px 30px;
+  display: inline-block;
+  border-radius: 25px;
+  font-weight: 400;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+  transition: all .3s;
+}
+
+.main-join-button a {
+  font-size: 14px;
+  color: #fff;
+  background-color: #222f3e;
+  padding: 12px 30px;
+  display: inline-block;
+  border-radius: 25px;
+  font-weight: 400;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+  transition: all .3s;
+}
+
+.main-join2-button a {
+  font-size: 14px;
+  color: #fff;
+  background-color: #1f2121;
+  padding: 12px 30px;
+  display: inline-block;
+  border-radius: 25px;
+  font-weight: 400;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+  transition: all .3s;
+}
+
+.main-download-button a {
+  font-size: 14px;
+  color: #fff;
+  background-color: #2c2c54;
+  padding: 12px 0px;
+  display: inline-block;
+  border-radius: 25px;
+  font-weight: 400;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+  transition: all .3s;
+  width: 80%;
+  margin-top: 10px;
+}
+
+.main-button a:hover {
+  background-color: #fff;
+  color: #2c2c54;
+}
+
+
+/* 
+---------------------------------------------
+Header Style
+--------------------------------------------- 
+*/
+
+.header-area {
+  background-color: transparent;
+  position: absolute;
+  top: 15px;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  -webkit-transition: all .5s ease 0s;
+  -moz-transition: all .5s ease 0s;
+  -o-transition: all .5s ease 0s;
+  transition: all .5s ease 0s;
+}
+
+.main-nav {
+  max-height: 80px;
+  display: flex;
+}
+
+.logo img {
+  width: 50%;
+  min-width: 100px;
+  height: 90%;
+  margin-left: 10px;
+}
+
+.nav {
+  display: inline-flex;
+  flex-basis: 100%;
+  justify-content: right;
+  vertical-align: right;
+  text-align: right;
+}
+
+
+.nav a {
+  display: block;
+  font-weight: 400;
+  font-size: 16px;
+  color: #AAA;
+  padding: 13px 10px;
+  border-radius: 18px;
+  letter-spacing: .3px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.nav a:hover, .nav a.active {
+  color: #AEAF;
+}
+
+/* 
+---------------------------------------------
+Banner Style
+--------------------------------------------- 
+*/
+
+.main-banner {
+  background-image: url(../images/banner-bg.jpg);
+  background-position: center center;
+  background-size: cover;
+  min-height: 380px;
+  border-radius: 23px;
+  padding: 80px 60px;
+  margin-top: 20px;
+}
+
+.main-banner h6 {
+  font-size: 45px;
+  color: #fff;
+  font-weight: 400;
+  margin-bottom: 25px;
+}
+
+.main-banner h4 {
+  font-size: 32px;
+  text-transform: uppercase;
+  margin-bottom: 25px;
+}
+
+.main-banner em {
+  font-style: normal;
+  color: #AEAF;
+}
+/* 
+---------------------------------------------
+Download Banner Style
+--------------------------------------------- 
+*/
+
+.main-download-banner {
+  background-image: url(../images/banner-bg2.jpg);
+  background-position: center center;
+  background-size: cover;
+  min-height: 380px;
+  border-radius: 23px;
+  padding: 80px 60px;
+  margin-top: 20px;
+}
+
+.main-download-banner h6 {
+  font-size: 45px;
+  color: #fff;
+  font-weight: 400;
+  margin-bottom: 25px;
+}
+
+.main-download-banner h4 {
+  font-size: 32px;
+  text-transform: uppercase;
+  margin-bottom: 25px;
+}
+
+.main-download-banner em {
+  font-style: normal;
+  color: #AEAF;
+}
+
+/* 
+---------------------------------------------
+Most Popular Style
+--------------------------------------------- 
+*/
+
+.our-projects {
+  margin-top: 60px;
+  background-color: #1f2122;
+  border-radius: 23px;
+  padding-bottom: 40px;
+  min-height: 200px;
+}
+
+.our-projects h4 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+  padding-top: 10px;
+}
+
+.rowlong {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item {
+  background-color: #27292a;
+  padding: 30px 15px;
+  margin-left: 10px;
+  margin-right: 10px;
+  border-radius: 23px;
+  width: 90%;
+  word-wrap: break-word;
+  text-align: center;
+}
+
+.item img {
+  border-radius: 23px;
+  max-height: 250px;
+  display: block;
+  margin-bottom: 20px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.item h4 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.item span {
+  color: #AAA;
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.item p {
+  color: #AAA;
+  font-size: 20px;
+  line-height: 40px;
+  font-weight: 400;
+}
+
+.item p2 {
+  color: #cE0F;
+  font-size: 16px;
+  line-height: 30px;
+  font-weight: 400;
+}
