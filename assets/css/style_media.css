@@ -1,0 +1,43 @@
+.contacts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.contact-card {
+    background-color: rgba(30, 30, 30, 0.9);
+    padding: 20px;
+    border: 1px solid #333;
+    transition: transform 0.3s;
+}
+
+.contact-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent-color);
+}
+
+.contact-icon {
+            font-size: 2em;
+            color: var(--accent-color);
+        }
+
+.contact-link {
+    display: inline-block;
+    padding: 8px 15px;
+    background-color: var(--secondary-bg-color);
+    color: var(--text-color);
+    text-decoration: none;
+    border: 1px solid #333;
+    transition: all 0.3s;
+}
+
+.contact-link:hover {
+    background-color: var(--accent-color);
+    color: #000;
+    border-color: var(--accent-color);
+}
+
+.social-description {
+    margin-bottom: 20px;
+}
