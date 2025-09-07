@@ -58,10 +58,10 @@
                 <br>Check lua_help_mp.lua to understand what you want to do.
             </div>
             <div class="example-title">Example:</div>
-            <pre>{
-    local GameManager = SteamGameManager()
-    local PlayerManager = GameManager:GetPlayerManager()
-}</pre>
+            <pre>
+local GameManager = SteamGameManager()
+local PlayerManager = GameManager:GetPlayerManager()
+</pre>
         </div>
 
         <div class="section">
@@ -82,13 +82,13 @@
                 and calls functa(se_object)
             </div>
             <div class="example-title">Example:</div>
-            <pre>{
-    alife_create_awaite(function(se)
-        if se then
-            log("Object box spawned: "..box:section_name())
-        end
-    end, "box", db.actor:position(), 0, 0)
-}</pre>
+            <pre>
+alife_create_awaite(function(se)
+    if se then
+        log("Object box spawned: "..box:section_name())
+    end
+end, "box", db.actor:position(), 0, 0)
+</pre>
 
             <h3><code>alife_release_client(se_object)</code></h3>
             <div class="function-desc">
@@ -105,6 +105,18 @@
             </div>
             <div class="example-title">Example:</div>
             <pre>alife_release_client_id(55)</pre>
+
+            <h3><code>RequestEntityDespawn(CSE_ALifeDynamicObject* se)</code></h3>
+            <div class="function-desc">
+                This function is used to remotely despawn an object on the host side from a client by id.
+                <br>Sends a despawn entity request to the host. The host despawns the object.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+local se_obj = alife_object(55)
+GameManager:RequestEntityDespawn(se_obj)
+</pre>
         </div>
 
         <div class="section">
@@ -116,16 +128,16 @@
                 <br>Check lua_help_mp.lua to understand what you want to do.
             </div>
             <div class="example-title">Example:</div>
-            <pre>{
-    local GameManager = SteamGameManager()
-    local PlayerManager = GameManager:GetPlayerManager()
-    local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
-    if pdata then
-        local id = pdata:GetNetID()
-        local pos = db.actor:position()
-        PlayerManager:TeleportPlayer(id, pos)
-    end
-}</pre>
+            <pre>
+local GameManager = SteamGameManager()
+local PlayerManager = GameManager:GetPlayerManager()
+local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
+if pdata then
+    local id = pdata:GetNetID()
+    local pos = db.actor:position()
+    PlayerManager:TeleportPlayer(id, pos)
+end
+</pre>
 
             <h3><code>SendToAnotherLevel(u32 NetID, Fvector Position, u32 gvid, u32 lvid, Fvector Angle)</code></h3>
             <div class="function-desc">
@@ -134,18 +146,18 @@
                 <br>Check lua_help_mp.lua to understand what you want to do.
             </div>
             <div class="example-title">Example:</div>
-            <pre>{
-    local GameManager = SteamGameManager()
-    local PlayerManager = GameManager:GetPlayerManager()
-    local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
-    if pdata then
-        local id = pdata:GetNetID()
-        local pos = db.actor:position()
-        local lvid = db.actor:level_vertex_id()
-        local gvid = db.actor:game_vertex_id()
-        PlayerManager:SendToAnotherLevel(id, pos, gvid, lvid, db.actor:direction())
-    end
-}</pre>
+            <pre>
+local GameManager = SteamGameManager()
+local PlayerManager = GameManager:GetPlayerManager()
+local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
+if pdata then
+    local id = pdata:GetNetID()
+    local pos = db.actor:position()
+    local lvid = db.actor:level_vertex_id()
+    local gvid = db.actor:game_vertex_id()
+    PlayerManager:SendToAnotherLevel(id, pos, gvid, lvid, db.actor:direction())
+end
+</pre>
 
             <h3><code>KickPlayer(u32 NetID)</code></h3>
             <div class="function-desc">
@@ -153,23 +165,54 @@
                 <br>Check lua_help_mp.lua to understand what you want to do.
             </div>
             <div class="example-title">Example:</div>
-            <pre>{
-    local GameManager = SteamGameManager()
-    local ServerSOSOCK = SteamServer()
-    local PlayerManager = GameManager:GetPlayerManager()
-    local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
-    if pdata then
-        local id = pdata:GetNetID()
-        PlayerManager:KickPlayer(id)
-    else
-        local NETid = ServerSOSOCK:get_player_by_index(1) -- HOST IS 0
-        PlayerManager:KickPlayer(NETid)
-    end
-}</pre>
+            <pre>
+local GameManager = SteamGameManager()
+local ServerSOSOCK = SteamServer()
+local PlayerManager = GameManager:GetPlayerManager()
+local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
+if pdata then
+    local id = pdata:GetNetID()
+    PlayerManager:KickPlayer(id)
+else
+    local NETid = ServerSOSOCK:get_player_by_index(1) -- HOST IS 0
+    PlayerManager:KickPlayer(NETid)
+end
+</pre>
+            <h3><code>DespawnPlayer(u32 SNET, bool Erase)</code></h3>
+            <div class="function-desc">
+                This function is used to force erase player data if need.
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+local ServerSOSOCK = SteamServer()
+local PlayerManager = GameManager:GetPlayerManager()
+local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
+if pdata then
+    local id = pdata:GetNetID()
+    PlayerManager:DespawnPlayer(id, false)
+else
+    local NETid = ServerSOSOCK:get_player_by_index(1) -- HOST IS 0
+    PlayerManager:DespawnPlayer(NETid, false)
+end
+</pre>
         </div>
 
         <div class="section">
             <h2>Weather and time synchronization functions</h2>
+
+            <h3><code>OnEmissionPsy(bool IsPsy, bool State)</code></h3>
+            <div class="function-desc">
+                This function is used to send psy or emission start/stop state.
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+GameManager:OnEmissionPsy(true, true) -- START PSY_STORM
+GameManager:OnEmissionPsy(false, true) -- START EMISSION
+</pre>
 
             <h3><code>OnTimeChanged()</code></h3>
             <div class="function-desc">
@@ -177,10 +220,10 @@
                 <br>Check lua_help_mp.lua to understand what you want to do.
             </div>
             <div class="example-title">Example:</div>
-            <pre>{
-    local GameManager = SteamGameManager()
-    GameManager:OnTimeChanged()
-}</pre>
+            <pre>
+local GameManager = SteamGameManager()
+GameManager:OnTimeChanged()
+</pre>
 
             <h3><code>OnWeatherChanged()</code></h3>
             <div class="function-desc">
@@ -188,10 +231,10 @@
                 <br>Check lua_help_mp.lua to understand what you want to do.
             </div>
             <div class="example-title">Example:</div>
-            <pre>{
-    local GameManager = SteamGameManager()
-    GameManager:OnWeatherChanged()
-}</pre>
+            <pre>
+local GameManager = SteamGameManager()
+GameManager:OnWeatherChanged()
+</pre>
 
             <h3><code>OnWeatherFXChanged()</code></h3>
             <div class="function-desc">
@@ -199,10 +242,10 @@
                 <br>Check lua_help_mp.lua to understand what you want to do.
             </div>
             <div class="example-title">Example:</div>
-            <pre>{
-    local GameManager = SteamGameManager()
-    GameManager:OnWeatherFXChanged()
-}</pre>
+            <pre>
+local GameManager = SteamGameManager()
+GameManager:OnWeatherFXChanged()
+</pre>
         </div>
         <div class="section">
             <h2>Custom actions synchronization functions</h2>
@@ -213,12 +256,314 @@
                 <br>Check lua_help_mp.lua to understand what you want to do.
             </div>
             <div class="example-title">Example:</div>
-            <pre>{
-    local GameManager = SteamGameManager()
-    GameManager:OnICustomScriptAction("ui_sleep_dialog.sleep_test", false)
-}</pre>
+            <pre>
+local GameManager = SteamGameManager()
+GameManager:OnICustomScriptAction("ui_sleep_dialog.sleep_test", false)
+</pre>
+
+            <h3><code>OnICustomAnimation(LPCSTR EBLANSKAYA_ANIM_NAME, LPCSTR APPEAR_ITEM, bool Force, float Delay, LPCSTR SND_NAME)</code>
+            </h3>
+            <div class="function-desc">
+                This function used to play custom animation of us.
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+local se_obj = alife_object(55)
+GameManager:OnICustomAnimation("sit_idle_0", "bread", true, 1.2, "sidor_talk_2")
+</pre>
         </div>
 
+
+        <div class="section">
+            <h2>Quest sync actions</h2>
+
+            <h3><code>OnIGetTask(CGameTask* datat, LPCSTR title_nt, LPCSTR descr_nt, u16 TaskGIVER, u16 Stage, bool newa)</code>
+            </h3>
+            <div class="function-desc">
+                This function is used to send new task or task state to engine. New or Update task
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+... In task_manager.script
+local tma = self.task_info[task_id]
+bool IsNewTsak = true
+GameManager:OnIGetTask(tma.t, tma.current_title or "", tma.current_descr or "", tma.task_giver_id or 65535, tma.stage, IsNewTsak)
+</pre>
+
+            <h3><code>OnForcedTaskState(LPCSTR ID, LPCSTR STATE)</code></h3>
+            <div class="function-desc">
+                This function is used to send forced task state. For handle in lua
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+... In task_manager.script
+local tma = self.task_info[task_id]
+-- SEND OLD TASK
+-- When old task was updated. Need only to update params.
+-- In anomaly used to complete some sort of tasks.
+GameManager:OnForcedTaskState(task_id, "complete")
+</pre>
+            <h3><code>OnIInfoPortion(LPCSTR Name, bool state)</code>
+            </h3>
+            <div class="function-desc">
+                This function used for sync info portion. Enable or Disable state.
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+GameManager:OnIInfoPortion("x18_dream_hell", true) -- ENABLE
+GameManager:OnIInfoPortion("x18_dream_hell_spawned", false) -- DISABLE
+</pre>
+            <h3><code>BlockInfoPortion(LPCSTR)</code>
+            </h3>
+            <div class="function-desc">
+                This function is used to block send infoportion from client's or host's side.
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+GameManager:BlockInfoPortion("x16_zasada_2")
+</pre>
+
+            <h3><code>OnEntitySpawned(CSE_ALifeDynamicObject* obj)</code>
+            </h3>
+            <div class="function-desc">
+                This function used for send spawn event of spawned entity. (Used like for sync furniture?)
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+local se_obj = alife_object(55)
+GameManager:OnEntitySpawned(se_obj)
+</pre>
+
+            <h3><code>OnCustomSound(LPCSTR Name, Fvector pos, u16 EID)</code>
+            </h3>
+            <div class="function-desc">
+                This function used to play specified sound on place or npc
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+GameManager:OnCustomSound("sidor_talk_2", db.actor:position(), 0)
+GameManager:OnCustomSound("sidor_talk_2", db.actor:position(), alife_object(55))
+</pre>
+
+            <h3><code>OnCustomSound(LPCSTR Name, Fvector pos, CSE_ALifeDynamicObject* EID)</code>
+            </h3>
+            <div class="function-desc">
+                This function used to play specified sound on place or npc
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+local se_obj = alife_object(55)
+GameManager:OnCustomSound("sidor_talk_2", se_obj.position, se_obj)
+</pre>
+
+            <h3><code>RegisterObject(CSE_ALifeDynamicObject* obj)</code>
+            </h3>
+            <div class="function-desc">
+                This function used for registering of object to order in sync list
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+local se_obj = alife_object(55)
+GameManager:RegisterObject(se_obj)
+</pre>
+
+            <h3><code>UnregisterObject(CSE_ALifeDynamicObject* obj)</code>
+            </h3>
+            <div class="function-desc">
+                This function used for unregistering of object to order in sync list
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+local se_obj = alife_object(55)
+GameManager:UnregisterObject(se_obj)
+</pre>
+            <h3><code>OnIWantCompanion(CSE_ALifeDynamicObject* obj)</code>
+            </h3>
+            <div class="function-desc">
+                This function used to hire a companion on host's side.
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+local se_obj = alife_object(55)
+GameManager:OnIWantCompanion(se_obj)
+</pre>
+
+            <h3><code>OnIWantCompanion(u16 obj)</code>
+            </h3>
+            <div class="function-desc">
+                This function used to hire a companion on host's side.
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+GameManager:OnIWantCompanion(55)
+</pre>
+
+            <h3><code>OnIWantCompanion(u16 obj)</code>
+            </h3>
+            <div class="function-desc">
+                This function used to fire a companion on host's side.
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+GameManager:OnINoWantCompanion(55)
+</pre>
+            <h3><code>OnIWantCompanion(CSE_ALifeDynamicObject* obj)</code>
+            </h3>
+            <div class="function-desc">
+                This function used to fire a companion on host's side.
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+local se_obj = alife_object(55)
+GameManager:OnINoWantCompanion(se_obj)
+</pre>
+
+            <h3><code>SendRewardTo(u32 TO, u32 FROM, u32 count)</code>
+            </h3>
+            <div class="function-desc">
+                This function used to fire a companion on host's side.
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+local ServerSOSOCK = SteamServer()
+local PlayerManager = GameManager:GetPlayerManager()
+local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
+local pdatam = PlayerManager:GetPlayerDataAtIndex(0) -- HOST IS 0
+if pdata then
+    local id = pdata:GetNetID()
+    local id2 = pdatam:GetNetID()
+    PlayerManager:SendRewardTo(id, id2, 100)
+end
+</pre>
+            <h3><code>SendDamageTo(u32 TO, u32 FROM, SHit* hit)</code>
+            </h3>
+            <div class="function-desc">
+                This function used to fire a companion on host's side.
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+local ServerSOSOCK = SteamServer()
+local PlayerManager = GameManager:GetPlayerManager()
+local pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0
+local pdatam = PlayerManager:GetPlayerDataAtIndex(0) -- HOST IS 0
+if pdata then
+    local id = pdata:GetNetID()
+    local id2 = pdatam:GetNetID()
+    local hit = hit()
+    ...
+    PlayerManager:SendDamageTo(id, id2, hit)
+end
+</pre>
+        </div>
+        <div class="section">
+            <h2>Console commands</h2>
+            <h3><code>say</code>
+            </h3>
+            <div class="function-desc">
+                This command used to chat in message from console.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>say pizda_ruly</pre>
+
+            <h3><code>sync_weatherfx_with_clients</code>
+            </h3>
+            <div class="function-desc">
+                This command used to sync weather fx with clients
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>sync_weatherfx_with_clients</pre>
+
+            <h3><code>sync_weather_with_clients</code>
+            </h3>
+            <div class="function-desc">
+                This command used to sync weather with clients
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>sync_weather_with_clients</pre>
+
+            <h3><code>sync_time_with_clients</code>
+            </h3>
+            <div class="function-desc">
+                This command used to sync time with clients
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>sync_time_with_clients</pre>
+
+            <h3><code>mdisconnect</code>
+            </h3>
+            <div class="function-desc">
+                This command used for force disconnect
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>mdisconnect</pre>
+
+            <h3><code>reconnect</code>
+            </h3>
+            <div class="function-desc">
+                This command used for reconnect to server (loads last save)
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>reconnect</pre>
+
+            <h3><code>reconnect</code>
+            </h3>
+            <div class="function-desc">
+                This command used for connect to server
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+connect 127.0.0.1:44139
+connect 127.0.0.1
+</pre>
+
+            <h3><code>kickplayer</code>
+            </h3>
+            <div class="function-desc">
+                This command used to kick player
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>kickplayer werasik2aa</pre>
+
+            <h3><code>sendmoney</code>
+            </h3>
+            <div class="function-desc">
+                This command used for send money to player
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>sendmoney werasik2aa 3500</pre>
+        </div>
         <footer>
             &copy; 2021-2025 STALKER TOGETHER TEAM
         </footer>
