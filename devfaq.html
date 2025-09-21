@@ -422,7 +422,7 @@ local GameManager = SteamGameManager()
 GameManager:OnIWantCompanion(55)
 </pre>
 
-            <h3><code>OnIWantCompanion(u16 obj)</code>
+            <h3><code>OnINoWantCompanion(u16 obj)</code>
             </h3>
             <div class="function-desc">
                 This function used to fire a companion on host's side.
@@ -433,7 +433,7 @@ GameManager:OnIWantCompanion(55)
 local GameManager = SteamGameManager()
 GameManager:OnINoWantCompanion(55)
 </pre>
-            <h3><code>OnIWantCompanion(CSE_ALifeDynamicObject* obj)</code>
+            <h3><code>OnINoWantCompanion(CSE_ALifeDynamicObject* obj)</code>
             </h3>
             <div class="function-desc">
                 This function used to fire a companion on host's side.
@@ -449,7 +449,7 @@ GameManager:OnINoWantCompanion(se_obj)
             <h3><code>SendRewardTo(u32 TO, u32 FROM, u32 count)</code>
             </h3>
             <div class="function-desc">
-                This function used to fire a companion on host's side.
+                This function used to send money to a client
                 <br>Check lua_help_mp.lua to understand what you want to do.
             </div>
             <div class="example-title">Example:</div>
@@ -465,10 +465,21 @@ if pdata then
     PlayerManager:SendRewardTo(id, id2, 100)
 end
 </pre>
+            <h3><code>SendRewardToAll(u32 count)</code>
+            </h3>
+            <div class="function-desc">
+                This function used to send money to all clients
+                <br>Check lua_help_mp.lua to understand what you want to do.
+            </div>
+            <div class="example-title">Example:</div>
+            <pre>
+local GameManager = SteamGameManager()
+PlayerManager:SendRewardToAll(count)
+</pre>
             <h3><code>SendDamageTo(u32 TO, u32 FROM, SHit* hit)</code>
             </h3>
             <div class="function-desc">
-                This function used to fire a companion on host's side.
+                This function used to damage to client
                 <br>Check lua_help_mp.lua to understand what you want to do.
             </div>
             <div class="example-title">Example:</div>
