@@ -129,9 +129,9 @@ const faqData = [
         title: "Quest sync actions",
         functions: [
             {
-                name: "OnIGetTask(CGameTask* datat, LPCSTR title_nt, LPCSTR descr_nt, u16 TaskGIVER, u16 Stage, bool newa)",
+                name: "OnIGetTask(CGameTask* datat, u16 TaskGIVER, u16 Stage)",
                 description: "This function is used to send new task or task state to engine. New or Update task\nYou should understand what you want to do!",
-                example: "local GameManager = SteamGameManager()\n... In task_manager.script\nlocal tma = self.task_info[task_id]\nbool IsNewTsak = true\nGameManager:OnIGetTask(tma.t, tma.current_title or \"\", tma.current_descr or \"\", tma.task_giver_id or 65535, tma.stage, IsNewTsak)"
+                example: "local GameManager = SteamGameManager()\n... In task_manager.script\nlocal tma = self.task_info[task_id]\nbool IsNewTsak = true\nGameManager:OnIGetTask(tma.t, tma.task_giver_id or 65535, tma.stage)"
             },
             {
                 name: "OnForcedTaskState(LPCSTR ID, LPCSTR STATE)",
