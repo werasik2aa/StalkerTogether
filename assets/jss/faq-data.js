@@ -74,11 +74,6 @@ const faqData = [
                 name: "KickPlayer(u32 NetID)",
                 description: "This function is used to kick a player. THIS IS A HOST ACTION!\nYou should understand what you want to do!",
                 example: "local GameManager = SteamGameManager()\nlocal ServerSOSOCK = SteamServer()\nlocal PlayerManager = GameManager:GetPlayerManager()\nlocal pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0\nif pdata then\n    local id = pdata:GetNetID()\n    PlayerManager:KickPlayer(id)\nelse\n    local NETid = ServerSOSOCK:get_player_by_index(1) -- HOST IS 0\n    PlayerManager:KickPlayer(NETid)\nend"
-            },
-            {
-                name: "DespawnPlayer(u32 SNET, bool Erase)",
-                description: "This function is used to force erase player data if need.\nYou should understand what you want to do!",
-                example: "local GameManager = SteamGameManager()\nlocal ServerSOSOCK = SteamServer()\nlocal PlayerManager = GameManager:GetPlayerManager()\nlocal pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0\nif pdata then\n    local id = pdata:GetNetID()\n    PlayerManager:DespawnPlayer(id, false)\nelse\n    local NETid = ServerSOSOCK:get_player_by_index(1) -- HOST IS 0\n    PlayerManager:DespawnPlayer(NETid, false)\nend"
             }
         ]
     },
@@ -113,14 +108,39 @@ const faqData = [
         title: "Custom actions synchronization functions",
         functions: [
             {
-                name: "OnICustomScriptAction(LPCSTR scrip_name, LPCSTR script_funct, LPCSTR script_args, bool OnlyToServer)",
-                description: "This function is used to send custom action to clients.\nExecuteOnlyOnHost situations if:\n1. Called from client so will be runned on host.\n2. Called from host this flag will be ignored. Host sends that event to all clients!\nYou should understand what you want to do!",
+                name: "OnICustomScriptAction(LPCSTR script_name, LPCSTR script_funct, LPCSTR script_args, bool OnlyToServer, u32 snet)",
+                description: "This function is used to send a custom action to clients.\n If it is called from a client, it will run on the host and then be resent to all clients.\nIf it is called from the host, the flag is ignored, and the host sends the event to all clients.\nIf a client sends it with the flag set to true, it will run only on the host.\nYou should understand what you want to do!",
                 example: "local GameManager = SteamGameManager()\n-- EXAMPLES\nGameManager:OnICustomScriptAction(\"weapon_giver\", \"give_weapon\", \"'wpn_knife', 3\", 1\", false)\nGameManager:OnICustomScriptAction(\"ui_sleep_dialog\", \"sleep_test\", \"\", false)"
             },
             {
-                name: "OnICustomAnimation(LPCSTR EBLANSKAYA_ANIM_NAME, LPCSTR APPEAR_ITEM, bool Force, float Delay, LPCSTR SND_NAME)",
-                description: "This function used to play custom animation of us.\nYou should understand what you want to do!",
-                example: "local GameManager = SteamGameManager()\nlocal se_obj = alife_object(55)\nGameManager:OnICustomAnimation(\"sit_idle_0\", \"bread\", true, 1.2, \"sidor_talk_2\")"
+                name: "OnICustomScriptAction(LPCSTR lua_line, bool OnlyToServer, u32 snet)",
+                description: "This function is used to send a custom action to clients.\n If it is called from a client, it will run on the host and then be resent to all clients.\nIf it is called from the host, the flag is ignored, and the host sends the event to all clients.\nIf a client sends it with the flag set to true, it will run only on the host.\nYou should understand what you want to do!",
+                example: "local GameManager = SteamGameManager()\n-- EXAMPLES\nGameManager:OnICustomScriptAction(\"weapon_giver\", \"give_weapon\", \"'wpn_knife', 3, 1\", false)\nGameManager:OnICustomScriptAction(\"ui_sleep_dialog\", \"sleep_test\", \"\", false)"
+            },
+            {
+                name: "OnICustomAnimation(LPCSTR ANIM_NAME, LPCSTR APPEAR_ITEM, bool Force, float Delay, LPCSTR SND_NAME)",
+                description: "This function controls the playing of custom player animations. \nIt Dictates the .omf animation used, the item appearing, the override, the delay, and the chosen sound.\nYou should understand what you want to do!",
+                example: "local GameManager = SteamGameManager()\nGameManager:OnICustomAnimation(\"sit_idle_0\", \"bread\", true, 1.2, \"sidor_talk_2\")"
+            },
+            {
+                name: "OnCustomSound(LPCSTR Name, Fvector pos, u16 EID)",
+                description: "This function used to play specified sound on place or npc\nYou should understand what you want to do!",
+                example: "local GameManager = SteamGameManager()\nGameManager:OnCustomSound(\"sidor_talk_2\", db.actor:position(), 0)\nGameManager:OnCustomSound(\"sidor_talk_2\", db.actor:position(), alife_object(55))"
+            },
+            {
+                name: "OnCustomSound(LPCSTR Name, Fvector pos, CSE_ALifeDynamicObject* EID)",
+                description: "This function used to play specified sound on place or npc\nYou should understand what you want to do!",
+                example: "local GameManager = SteamGameManager()\nlocal se_obj = alife_object(55)\nGameManager:OnCustomSound(\"sidor_talk_2\", se_obj.position, se_obj)"
+            },
+            {
+                name: "GetMySNETID()",
+                description: "This entry determines the specific NETID the player will use while connected to the server.\nIt determines which player sends and recieves packets on the network, and what packets are recieved.\nYou should understand what you want to do!",
+                example: "local snetid = GameManager:GetMySNETID()"
+            },
+            {
+                name: "GetNetID()",
+                description: "Returns the player’s unique network ID, which is used to identify and send data to that specific player across the network.\nYou should understand what you want to do!",
+                example: "local obj = level.object_by_id(346)   \nlocal snetid = obj:GetNetID()"
             }
         ]
     },
@@ -152,46 +172,6 @@ const faqData = [
                 name: "OnEntitySpawned(CSE_ALifeDynamicObject* obj)",
                 description: "This function used for send spawn event of spawned entity. (Used like for sync furniture?)\nYou should understand what you want to do!",
                 example: "local GameManager = SteamGameManager()\nlocal se_obj = alife_object(55)\nGameManager:OnEntitySpawned(se_obj)"
-            },
-            {
-                name: "OnCustomSound(LPCSTR Name, Fvector pos, u16 EID)",
-                description: "This function used to play specified sound on place or npc\nYou should understand what you want to do!",
-                example: "local GameManager = SteamGameManager()\nGameManager:OnCustomSound(\"sidor_talk_2\", db.actor:position(), 0)\nGameManager:OnCustomSound(\"sidor_talk_2\", db.actor:position(), alife_object(55))"
-            },
-            {
-                name: "OnCustomSound(LPCSTR Name, Fvector pos, CSE_ALifeDynamicObject* EID)",
-                description: "This function used to play specified sound on place or npc\nYou should understand what you want to do!",
-                example: "local GameManager = SteamGameManager()\nlocal se_obj = alife_object(55)\nGameManager:OnCustomSound(\"sidor_talk_2\", se_obj.position, se_obj)"
-            },
-            {
-                name: "RegisterObject(CSE_ALifeDynamicObject* obj)",
-                description: "This function used for registering of object to order in sync list\nYou should understand what you want to do!",
-                example: "local GameManager = SteamGameManager()\nlocal se_obj = alife_object(55)\nGameManager:RegisterObject(se_obj)"
-            },
-            {
-                name: "UnregisterObject(CSE_ALifeDynamicObject* obj)",
-                description: "This function used for unregistering of object to order in sync list\nYou should understand what you want to do!",
-                example: "local GameManager = SteamGameManager()\nlocal se_obj = alife_object(55)\nGameManager:UnregisterObject(se_obj)"
-            },
-            {
-                name: "OnIWantCompanion(CSE_ALifeDynamicObject* obj)",
-                description: "This function used to hire a companion on host's side.\nYou should understand what you want to do!",
-                example: "local GameManager = SteamGameManager()\nlocal se_obj = alife_object(55)\nGameManager:OnIWantCompanion(se_obj)"
-            },
-            {
-                name: "OnIWantCompanion(u16 obj)",
-                description: "This function used to hire a companion on host's side.\nYou should understand what you want to do!",
-                example: "local GameManager = SteamGameManager()\nGameManager:OnIWantCompanion(55)"
-            },
-            {
-                name: "OnINoWantCompanion(u16 obj)",
-                description: "This function used to fire a companion on host's side.\nYou should understand what you want to do!",
-                example: "local GameManager = SteamGameManager()\nGameManager:OnINoWantCompanion(55)"
-            },
-            {
-                name: "OnINoWantCompanion(CSE_ALifeDynamicObject* obj)",
-                description: "This function used to fire a companion on host's side.\nYou should understand what you want to do!",
-                example: "local GameManager = SteamGameManager()\nlocal se_obj = alife_object(55)\nGameManager:OnINoWantCompanion(se_obj)"
             },
             {
                 name: "SendRewardTo(u32 TO, u32 FROM, u32 count)",
@@ -235,29 +215,9 @@ const faqData = [
                 example: "local GameManager = SteamGameManager()\nlocal ServerSOSOCK = SteamServer()\nlocal PlayerManager = GameManager:GetPlayerManager()\nlocal pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0\nif pdata then\n    local id = pdata:GetNetID()\n    PlayerManager:SyncEmissionPsy(id, true, true) -- START PSY_STORM\n    PlayerManager:SyncEmissionPsy(id, false, true) -- START EMISSION\nend"
             },
             {
-                name: "SyncObjectWithPlayer(u32 TO, CSE_ALifeDynamicObject* obj)",
-                description: "This function used to sync object with player. Like object that not was online or not spawned on client side.\n Example when need to sync objects on another levels.",
-                example: "local GameManager = SteamGameManager()\nlocal ServerSOSOCK = SteamServer()\nlocal PlayerManager = GameManager:GetPlayerManager()\nlocal pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0\nif pdata then\n    local id = pdata:GetNetID()\n    local se_obj = alife_object(55)\n    PlayerManager:SyncObjectWithPlayer(id, se_obj)\nend"
-            },
-            {
                 name: "SyncTaskWith(u32 SNET, void* datat, LPCSTR title_nt, LPCSTR descr_nt, u16 TaskGIVER, u16 TaskStage, bool newa)",
                 description: "This function used to sync task with client. Example when task stuck or need to update it on client's side!",
                 example: "local GameManager = SteamGameManager()\nlocal ServerSOSOCK = SteamServer()\nlocal PlayerManager = GameManager:GetPlayerManager()\nlocal pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0\nif pdata then\n    local id = pdata:GetNetID()\n    local tma = task_manager.get_task_manager().task_info[...]\n    PlayerManager:SyncTaskWith(PlayerNetID, tma.t, tma.current_title or '', tma.current_descr or '', tma.task_giver_id or 65535, tma.stage, false)\nend"
-            },
-            {
-                name: "IsItMyPlayer(u16 TO)",
-                description: "This function used to check is this object is it player",
-                example: "local GameManager = SteamGameManager()\nlocal PlayerManager = GameManager:GetPlayerManager()\nlocal obj_id = ...\nlocal pizda_bool = PlayerManager:IsItMyPlayer(obj_id)"
-            },
-            {
-                name: "AddItem(u32 SNET, LPCSTR name)",
-                description: "This function used to add item to inventory. Like if it not added by usuall method.\nUsualy quests or inviseble items...",
-                example: "local GameManager = SteamGameManager()\nlocal ServerSOSOCK = SteamServer()\nlocal PlayerManager = GameManager:GetPlayerManager()\nlocal pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0\nif pdata then\n    local id = pdata:GetNetID()\n    PlayerManager:AddItem(id, 'wpn_knife')\nend"
-            },
-            {
-                name: "RemoveItem(u32 SNET, LPCSTR name)",
-                description: "This function used to remove item from inventory. Like if it not removed by usuall method.\nUsualy quests like force removed items.",
-                example: "local GameManager = SteamGameManager()\nlocal ServerSOSOCK = SteamServer()\nlocal PlayerManager = GameManager:GetPlayerManager()\nlocal pdata = PlayerManager:GetPlayerDataAtIndex(1) -- HOST IS 0\nif pdata then\n    local id = pdata:GetNetID()\n    PlayerManager:RemoveItem(id, 'wpn_knife')\nend"
             }
         ]
     },
