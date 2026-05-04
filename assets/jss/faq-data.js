@@ -269,7 +269,43 @@ const faqData = [
                 name: "sendmoney",
                 description: "This command used for send money to player",
                 example: "sendmoney werasik2aa 3500"
+            },
+            {
+                name: "mp_olmode",
+                description: "This command used for switch to LAN/Online mode",
+                example: "mp_olmode 0 - Disable Online mode (Enable LAN mode)\nmp_olmode 1 - Enable Online Mode (Disable LAN connection)"
+            },
+            {
+                name: "mp_nickname",
+                description: "This command used for change current nickname",
+                example: "mp_nickname werasik2aa"
             }
         ]
-    }
+    },
+    {
+        id: "steamappi",
+        title: "Steam api controll",
+        functions: [
+            {
+                name: "Steam NAT Traversal guide",
+                description: "To use Online mode connection you can use steam, but if you don't have steam overlay",
+                example: "1. Create 'steam_appid.txt' in game directory/bin\n2. Type in it 480\n3. Now run game\n4. If steam overlay still not works, try to create that file in game root directory\nIMPORTANT: Need to sure that steam is turned on!"
+            },
+            {
+                name: "Steam Overlay in game",
+                description: "Use it to connect to your Steam Friends. Usually need",
+                example: "1. Press Shift+Tab.\n2. Press right mouse button on friend\n3. Press connect to game\n4. Wait when it will be connected!"
+            },
+            {
+                name: "Steam Restrictions",
+                description: "Use it to connect to your Steam Friends. Usually need",
+                example: "If you're developper steamappi has limitations on data traffic!\nIf you have very big data arrays or packets which you want to sync, need to chunk them!\n Easy way make delay for rest second thread when it flush buffer.\n(CustomScriptAction always reliable packet!)"
+            }, 
+            {
+                name: "How to enable LAN connections",
+                description: "This command used for switch to LAN/Online mode",
+                example: "Check about 'mp_olmode' in commands divide"
+            },
+        ]
+    },
 ];
