@@ -1,39 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STALKER Together - For Developers</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/style_devfaq.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STOGETHER — Для разработчиков</title>
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
-
 <body>
-    <div class="container">
-        <header>
-            <h1>STALKER | TOGETHER</h1>
-        </header>
+<div class="site-wrapper">
+  <aside class="sidebar-nav">
+    <div class="brand">
+      <span>STALKER | TOGETHER</span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Главная</a>
+      <a href="download.html">Скачать</a>
+      <a href="demos.html">Видео</a>
+      <a href="devfaq.html" class="active">Документация</a>
+      <a href="media.html">Медиа</a>
+    </div>
+  </aside>
 
-        <nav>
-            <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="download.html">Download</a></li>
-                <li><a href="demos.html">Videos</a></li>
-                <li><a href="devfaq.html" class="active">For developers</a></li>
-                <li><a href="media.html">Media</a></li>
-            </ul>
-        </nav>
-
-        <!-- ������ ����� ����������� ������� JavaScript -->
-
-        <footer>
-            &copy; 2021-2026 STALKER TOGETHER TEAM
-        </footer>
+  <main class="main-content">
+    <div class="hero">
+      <div class="eyebrow">API и консольные комманды</div>
+      <p class="lead">Консольные команды, методы, примеры, callback-и, квестовые патчи и игровые изменения, собранные на основе исходного кода.</p>
+      <div class="hero-tools" style="margin-top: 24px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
+        <label class="search" style="flex: 1; min-width: 250px;">
+          <input id="search" type="search" placeholder="alife_create, task, callback... search" style="width: 100%; padding: 12px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; color: var(--text);">
+        </label>
+        <div class="counter" id="counter" style="color: #b8e986; background: rgba(139, 195, 74, 0.08); border: 1px solid rgba(139, 195, 74, 0.22); border-radius: 12px; padding: 10px 18px;">Загрузка...</div>
+		<div id="navlinks" class="nav-links"></div>
+      </div>
     </div>
 
-    <!-- ���������� ������� -->
-    <script src="assets/jss/faq-data.js"></script>
-    <script src="assets/jss/faq-gena.js"></script>
+    <div id="docs"></div>
+
+    <footer class="footer">
+      <span>© 2021-2026 STALKER TOGETHER TEAM</span>
+      <a href="#">Наверх ↑</a>
+    </footer>
+  </main>
+</div>
+
+<script src="assets/js/devfaq.js"></script>
 </body>
 </html>
