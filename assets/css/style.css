@@ -195,8 +195,7 @@ h2 {
 }
 
 .hero-tools {
-  display: grid;
-  grid-template-columns: minmax(260px, 520px) auto;
+  display: flex;
   gap: 14px;
   align-items: center;
   margin-top: 24px;
@@ -230,7 +229,9 @@ h2 {
   border: 1px solid rgba(101, 208, 212, 0.26);
   border-radius: 12px;
   padding: 10px 18px;
+  margin-top: 24px;
   white-space: nowrap;
+  text-align: center;
 }
 
 /* API Sections */
