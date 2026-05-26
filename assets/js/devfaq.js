@@ -270,6 +270,636 @@ const sections = [
   }
 ];
 
+const richExamples = {
+  'SteamGameManager()': `local GameManager = SteamGameManager()
+local PlayerManager = GameManager:GetPlayerManager()
+
+if GameManager:GetFlag() then
+  log('[MP] Current peer is host')
+else
+  log('[MP] Current peer is client')
+end`,
+
+  'SteamServer()': `local ServerSOSOCK = SteamServer()
+
+if ServerSOSOCK:IsSteamSocketOpen() then
+  local firstPeer = ServerSOSOCK:get_player_by_index(1)
+  if firstPeer then
+    log('[MP] First connected peer net id: ' .. tostring(firstPeer))
+  end
+end`,
+
+  'SteamClient()': `local ClientSocks = SteamClient()
+
+if ClientSocks:IsConnected() then
+  log('[MP] Client is connected')
+else
+  log('[MP] Client is offline')
+end`,
+
+  'GameManager:GetPlayerManager()': `local GameManager = SteamGameManager()
+local PlayerManager = GameManager:GetPlayerManager()
+
+for index = 0, 3 do
+  local pdata = PlayerManager:GetPlayerDataAtIndex(index)
+  if pdata then
+    printf('[MP] Player slot %s net id: %s', tostring(index), tostring(pdata:GetNetID()))
+  end
+end`,
+
+  'IIsHost()': `local function host_only_spawn(section)
+  if not IIsHost() then
+    log('[MP] Spawn skipped: only host can run this block')
+    return nil
+  end
+
+  return alife_create(
+    section,
+    db.actor:position(),
+    db.actor:level_vertex_id(),
+    db.actor:game_vertex_id()
+  )
+end`,
+
+  'IIsClient()': `if IIsClient() then
+  local payload = serialize_table_simple({
+    sender = GameManager:GetMySNETID(),
+    position = db.actor:position(),
+    level = level.name()
+  })
+
+  GameManager:OnICustomScriptAction('my_module', 'remote_request', payload, true)
+end`,
+
+  'alife_create_client(sec, pos, lid, gid, id, state)': `local actor = db.actor
+if actor then
+  alife_create_client(
+    'af_medusa',
+    actor:position(),
+    actor:level_vertex_id(),
+    actor:game_vertex_id()
+  )
+end`,
+
+  'alife_create_awaite(funca, sec, pos, lid, gid, id, state)': `alife_create_awaite(function(se_obj)
+  if not se_obj then
+    printe('[MP] Failed to create backpack stash')
+    return
+  end
+
+  level.map_add_object_spot_ser(se_obj.id, 'treasure', 'Player stash')
+  log('[MP] Created synced stash: ' .. tostring(se_obj.id))
+end, 'inv_backpack', db.actor:position(), db.actor:level_vertex_id(), db.actor:game_vertex_id())`,
+
+  'alife_create_special_awaite(funca, special, sec, pos, lid, gid, id, state)': `local function configure_gate(se_obj)
+  if se_obj and se_obj.set_yaw then
+    se_obj:set_yaw(0)
+  end
+end
+
+local function on_gate_ready(se_obj)
+  if se_obj then
+    log('[MP] Gate spawned: ' .. tostring(se_obj.id))
+  end
+end
+
+alife_create_special_awaite(on_gate_ready, configure_gate, 'jup_b219_gate', pos, lid, gid)`,
+
+  'alife_release_client(se_obj, msg)': `local function remove_object_by_id(id)
+  local se_obj = alife_object(id)
+  if not se_obj then
+    return false
+  end
+
+  alife_release_client(se_obj, 'requested by addon')
+  return true
+end`,
+
+  'alife_release_client_id(id, msg)': `local box_id = 55
+
+if alife_object(box_id) then
+  alife_release_client_id(box_id, 'empty stash cleanup')
+end`,
+
+  'alife_create_item(section, object, t)': `local target = db.actor
+
+if target and not target:object('bad_psy_helmet') then
+  alife_create_item('bad_psy_helmet', target)
+  news_manager.relocate_item(target, 'in', 'bad_psy_helmet')
+end`,
+
+  'IsActor(o, c)': `RegisterScriptCallback('npc_on_before_hit', function(npc, hit, bone_id, flags)
+  local attacker = hit and hit.draftsman
+  if attacker and IsActor(attacker) and not MPMain_STOGETHER.FriendlyFire then
+    flags.ret_value = false
+  end
+end)`,
+
+  'IsMonster(o, c)': `local function should_ignore_enemy(enemy)
+  if not enemy then return true end
+  if IsMonster(enemy) then return true end
+  return false
+end`,
+
+  'IsFood(o)': `local function count_food(actor)
+  local count = 0
+
+  actor:iterate_inventory(function(_, item)
+    if IsFood(item) then
+      count = count + 1
+    end
+  end, nil)
+
+  return count
+end`,
+
+  'serialize_table_simple(tbl)': `local payload = serialize_table_simple({
+  sender = GameManager:GetMySNETID(),
+  section = 'inv_backpack',
+  position = db.actor:position(),
+  level = level.name()
+})
+
+GameManager:OnICustomScriptAction('my_module', 'remote_receive_spawn_data', payload, true)`,
+
+  'PlayerManager:TeleportPlayer(NetID, Position)': `local GameManager = SteamGameManager()
+local PlayerManager = GameManager:GetPlayerManager()
+
+if IIsHost() then
+  local pdata = PlayerManager:GetPlayerDataAtIndex(1)
+  if pdata then
+    PlayerManager:TeleportPlayer(pdata:GetNetID(), db.actor:position())
+  end
+end`,
+
+  'PlayerManager:SendToAnotherLevel(NetID, Position, gvid, lvid, Angle)': `local pm = SteamGameManager():GetPlayerManager()
+local pdata = pm:GetPlayerDataAtIndex(1)
+
+if IIsHost() and pdata then
+  pm:SendToAnotherLevel(
+    pdata:GetNetID(),
+    db.actor:position(),
+    db.actor:game_vertex_id(),
+    db.actor:level_vertex_id(),
+    db.actor:direction()
+  )
+end`,
+
+  'sync_task_variables(task_id, netid)': `local task_id = 'some_random_task'
+local netid = GameManager:GetMySNETID()
+
+if IIsHost() then
+  MPMain_QuestPatches_STOGETHER.sync_task_variables(task_id, netid)
+else
+  GameManager:OnICustomScriptAction(
+    'MPMain_QuestPatches_STOGETHER',
+    'sync_task_variables',
+    string.format('%q,%s', task_id, tostring(netid)),
+    true
+  )
+end`,
+
+  'client_draw_postpone_locally(task_id, SkipSpecial)': `local tasks = axr_task_manager.available_tasks[npc:id()]
+if tasks and tasks[1] then
+  local preview = MPMain_QuestPatches_STOGETHER.client_draw_postpone_locally(tasks[1])
+  if preview then
+    log('[MP] Local task preview title: ' .. tostring(preview[1]))
+  end
+end`,
+
+  'dialogs.remote_configure_npc(table_data)': `local npc = mob_trade.GetTalkingNpc()
+if npc then
+  local payload = {
+    id = GameManager:GetServerIDByLocalID(npc:id()),
+    busy = true,
+    netid = GameManager:GetMySNETID()
+  }
+
+  dialogs.remote_configure_npc(payload)
+end`,
+
+  'item_backpack.remote_stash_create(tbl_data)': `local payload = {
+  'My stash',
+  'itm_actor_backpack',
+  db.actor:position(),
+  db.actor:level_vertex_id(),
+  db.actor:game_vertex_id()
+}
+
+if IIsHost() then
+  item_backpack.remote_stash_create(payload)
+else
+  GameManager:OnICustomScriptAction('item_backpack', 'remote_stash_create', serialize_table_simple(payload), true)
+end`,
+
+  'txr_mines.plant_bomb(obj, mode, delay)': `local explosive = db.actor:object('ied_new')
+
+if explosive then
+  local mode = 'timer'
+  local delay = 8
+  txr_mines.plant_bomb(explosive, mode, delay)
+else
+  actor_menu.set_msg(1, 'No explosive in inventory', 3)
+end`,
+
+  'onmp_entity_spawned': `RegisterScriptCallback('onmp_entity_spawned', function(se_obj)
+  if not se_obj then return end
+
+  local section = se_obj:section_name()
+  printf('[MP] Entity spawned: %s (%s)', section, tostring(se_obj.id))
+
+  if section == 'inv_backpack' then
+    level.map_add_object_spot_ser(se_obj.id, 'treasure', 'Synced stash')
+  end
+end)`,
+
+  'GUI_on_show': `RegisterScriptCallback('GUI_on_show', function(name)
+  if name ~= 'Dialog' then return end
+
+  local npc = mob_trade.GetTalkingNpc()
+  if npc then
+    log('[MP] Dialog opened with: ' .. npc:name())
+  end
+end)`,
+
+  'OnICustomScriptAction(script_name, script_funct, script_args, OnlyToServer, targetNetId)': `local payload = serialize_table_simple({
+  id = GameManager:GetServerIDByLocalID(db.actor:id()),
+  level = level.name(),
+  text = 'hello from client'
+})
+
+-- true: выполнить только на хосте
+GameManager:OnICustomScriptAction('my_module', 'remote_receive', payload, true)`,
+
+  'Пример: запрос данных': `local my_netid = GameManager:GetMySNETID()
+
+GameManager:OnICustomScriptAction(
+  'dialogs',
+  'request_trade_data',
+  tostring(my_netid),
+  true
+)`,
+
+  'RestoreValues()': `-- Полезно вызвать после изменения MCM-настроек в рантайме.
+RestoreValues()
+
+printf('[MP] Settings restored. MaxPlayers=%s FriendlyFire=%s',
+  tostring(MPMain_STOGETHER.MaxPlayers),
+  tostring(MPMain_STOGETHER.FriendlyFire)
+)`,
+
+  'MPAttackCondition(entity, player)': `local function can_npc_attack_player(npc, player)
+  if not (npc and player) then return false end
+  if not IIsHost() then return false end
+
+  return MPAttackCondition(npc, player)
+end
+
+if can_npc_attack_player(npc, db.actor) then
+  log('[MP] NPC attack allowed by host')
+end`,
+
+  'mp_set_state_surge(pstate)': `-- Запускать лучше с хоста, чтобы состояние не расходилось.
+if IIsHost() then
+  mp_set_state_surge(true)
+
+  CreateTimeEvent('mp_weather', 'stop_surge_later', 60, function()
+    mp_set_state_surge(false)
+    return true
+  end)
+end`,
+
+  'mp_set_state_storm(pstate)': `if IIsHost() then
+  mp_set_state_storm(true)
+
+  CreateTimeEvent('mp_weather', 'stop_storm_later', 45, function()
+    mp_set_state_storm(false)
+    return true
+  end)
+end`,
+
+  'PlayerManager:KickPlayer(NetID)': `local pm = SteamGameManager():GetPlayerManager()
+
+if IIsHost() then
+  local pdata = pm:GetPlayerDataAtIndex(1)
+  if pdata then
+    pm:KickPlayer(pdata:GetNetID())
+  end
+end`,
+
+  'PlayerManager:SendRewardTo(TO, FROM, count)': `local pm = SteamGameManager():GetPlayerManager()
+local host = pm:GetPlayerDataAtIndex(0)
+local target = pm:GetPlayerDataAtIndex(1)
+
+if IIsHost() and host and target then
+  pm:SendRewardTo(target:GetNetID(), host:GetNetID(), 2500)
+end`,
+
+  'PlayerManager:SendRewardToAll(count)': `local pm = SteamGameManager():GetPlayerManager()
+
+if IIsHost() then
+  pm:SendRewardToAll(1000)
+  news_manager.send_tip(db.actor, 'mp_reward_all', nil, nil, 5000)
+end`,
+
+  'PlayerManager:SendDamageTo(TO, FROM, hit)': `local pm = SteamGameManager():GetPlayerManager()
+local target = pm:GetPlayerDataAtIndex(1)
+local source = pm:GetPlayerDataAtIndex(0)
+
+if IIsHost() and target and source then
+  local hit_data = hit()
+  hit_data.power = 0.15
+  hit_data.impulse = 20
+  pm:SendDamageTo(target:GetNetID(), source:GetNetID(), hit_data)
+end`,
+
+  'PlayerManager:SyncWeatherWith(TO, Weather, force)': `local pm = SteamGameManager():GetPlayerManager()
+local target = pm:GetPlayerDataAtIndex(1)
+
+if IIsHost() and target then
+  pm:SyncWeatherWith(target:GetNetID(), 'w_clear1', true)
+end`,
+
+  'PlayerManager:SyncWeatherFXWith(TO, Weather)': `local pm = SteamGameManager():GetPlayerManager()
+local target = pm:GetPlayerDataAtIndex(1)
+
+if IIsHost() and target then
+  pm:SyncWeatherFXWith(target:GetNetID(), 'surge_fx')
+end`,
+
+  'PlayerManager:SyncEmissionPsy(SNET, Psy, state)': `local pm = SteamGameManager():GetPlayerManager()
+local target = pm:GetPlayerDataAtIndex(1)
+
+if IIsHost() and target then
+  pm:SyncEmissionPsy(target:GetNetID(), false, true) -- emission start
+  pm:SyncEmissionPsy(target:GetNetID(), true, false) -- psi storm stop
+end`,
+
+  'PlayerManager:SyncTaskWith(SNET, task, task_giver, stage)': `local pm = SteamGameManager():GetPlayerManager()
+local target = pm:GetPlayerDataAtIndex(1)
+local tm = task_manager.get_task_manager()
+local tma = tm.task_info['some_task_id']
+
+if IIsHost() and target and tma then
+  pm:SyncTaskWith(target:GetNetID(), tma.t, tma.task_giver_id or 65535, tma.stage or 0)
+end`,
+
+  'GameManager:GetMySNETID()': `local GameManager = SteamGameManager()
+local my_netid = GameManager:GetMySNETID()
+
+local payload = serialize_table_simple({
+  netid = my_netid,
+  level = level.name(),
+  pos = db.actor:position()
+})
+
+GameManager:OnICustomScriptAction('my_module', 'remote_ping', payload, true)`,
+
+  'some_objectlua:GetNetID()': `local obj = level.object_by_id(db.actor:id())
+if obj and obj.GetNetID then
+  local target_netid = obj:GetNetID()
+  GameManager:OnICustomScriptAction('my_module', 'remote_private_event', 'true', false, target_netid)
+end`,
+
+  'dialogs.remote_task_var_sync(packet)': `local packet = {
+  'example_task_fetch_count',
+  3,
+  false
+}
+
+dialogs.remote_task_var_sync(packet)
+
+-- Bulk form:
+dialogs.remote_task_var_sync({ 'data', {
+  example_task_fetch = 'medkit',
+  example_task_fetch_count = 3
+}, true })`,
+
+  'task_manager.CRandomTask:give_task(task_id, task_giver_id)': `local tm = task_manager.get_task_manager()
+local npc = mob_trade.GetTalkingNpc()
+
+if npc then
+  tm:give_task('example_random_task', npc:id())
+end`,
+
+  'task_manager.CRandomTask:set_task_completed(task_id)': `local tm = task_manager.get_task_manager()
+
+if tm.task_info['example_random_task'] then
+  tm:set_task_completed('example_random_task')
+end`,
+
+  'item_backpack.actor_on_item_use(obj)': `local backpack_item = db.actor:object('itm_actor_backpack')
+
+if backpack_item then
+  item_backpack.actor_on_item_use(backpack_item)
+else
+  actor_menu.set_msg(1, game.translate_string('st_stash_no_backpack_found'), 4)
+end`,
+
+  'item_backpack.sync_all_stashes(netid)': `if IIsHost() then
+  local target_netid = SteamGameManager():GetMySNETID()
+  item_backpack.sync_all_stashes(target_netid)
+end`,
+
+  'txr_mines.remote_plant_bomb(tbl_data)': `local cd = device().cam_dir
+local ap = db.actor:position()
+local pos = vector():set(ap.x + cd.x, ap.y + 0.1, ap.z + cd.z)
+
+local payload = {
+  'ied_new',
+  'timer',
+  5,
+  pos,
+  level.vertex_id(pos),
+  db.actor:game_vertex_id()
+}
+
+if IIsHost() then
+  txr_mines.remote_plant_bomb(payload)
+end`,
+
+  'raid_travel_manager.raid_teleport(level_name)': `local target_level = 'l03_agroprom'
+
+if raid_travel_manager then
+  raid_travel_manager.raid_teleport(target_level)
+end`,
+
+  'pda_taskboard.remote_request_improved_taskboard(table_data, onlyreturn)': `local srv_ids = {}
+
+for _, npc in ipairs(pda_taskboard.get_nearby_npcs()) do
+  if not IsActor(npc) then
+    srv_ids[#srv_ids + 1] = GameManager:GetServerIDByLocalID(npc:id())
+  end
+end
+
+pda_taskboard.remote_request_improved_taskboard({
+  srv_ids = srv_ids,
+  netid = GameManager:GetMySNETID()
+})`,
+
+  'news_manager.send_tip_client(data)': `local data = {
+  'st_mp_sync_done',
+  nil,
+  nil,
+  5000,
+  0
+}
+
+news_manager.send_tip_client(data)`,
+
+  'ui_pda_npc_tab.sync_pda_info(pda_id)': `local pda_id = db.actor:object('device_pda') and db.actor:object('device_pda'):id()
+
+if IIsHost() and pda_id then
+  CreateTimeEvent(pda_id, 'manual_pda_sync', 0.2, function()
+    ui_pda_npc_tab.sync_pda_info(pda_id)
+    return true
+  end)
+end`,
+
+  'ui_pda_npc_tab.remote_receive_pda_info(data)': `-- data = { server_pda_id, pda_info_table }
+local server_id = data[1]
+local info = data[2]
+
+if server_id and info then
+  local local_id = GameManager:GetLocalIDByServerID(server_id)
+  se_save_var(local_id, nil, 'info', info)
+end`,
+
+  'bind_stalker_ext.death_manager_mp(reload, show_message)': `-- Показать локальный экран смерти без reload.
+bind_stalker_ext.death_manager_mp(false, true)
+
+CreateTimeEvent('mp_death_preview', 'clear_logo', 4, function()
+  bind_stalker_ext.clear_death_logo()
+  return true
+end)`,
+
+  'bind_campfire.campfire_go_on(obj, cf)': `local obj_item = db.actor:object('matches') or db.actor:object('box_matches')
+local cf = bind_campfire.get_nearby_campfire(2, true)
+
+if obj_item and cf then
+  bind_campfire.campfire_go_on(obj_item, cf)
+end`,
+
+  'itms_manager.use_guitar(obj)': `local guitar = db.actor:object('guitar_a') or db.actor:object('guitar_b')
+
+if guitar then
+  itms_manager.use_guitar(guitar)
+else
+  actor_menu.set_msg(1, 'No guitar in inventory', 3)
+end`,
+
+  'treasure_manager.remote_add_map_spot(p)': `local payload = {
+  GameManager:GetServerIDByLocalID(box:id()),
+  'treasure',
+  game.translate_string('st_stash_of')
+}
+
+treasure_manager.remote_add_map_spot(payload)`,
+
+  'treasure_manager.sync_all_stashes(PlayerNetID)': `if IIsHost() then
+  local target_netid = SteamGameManager():GetMySNETID()
+  treasure_manager.sync_all_stashes(target_netid)
+end`,
+
+  'pda.host_request_ranking(data)': `if IIsHost() then
+  pda.host_request_ranking({
+    netid = GameManager:GetMySNETID(),
+    page = 'rankings'
+  })
+end`,
+
+  'pda.client_receive_ranking(payload)': `pda.client_receive_ranking(payload)
+
+if ui_pda and ui_pda.GUI and ui_pda.GUI:IsShown() then
+  pda.calculate_rankings()
+end`,
+
+  'engine_perform_special_addon_sync(id, ToPlayerNetID)': `local server_id = GameManager:GetServerIDByLocalID(obj:id())
+local target_netid = GameManager:GetMySNETID()
+
+engine_perform_special_addon_sync(server_id, target_netid)`,
+
+  'addoned_draw_postpone_locally(task_id)': `local task_id = 'raid_task_rf_find'
+local preview = addoned_draw_postpone_locally(task_id)
+
+if preview then
+  local title, text, icon = preview[1], preview[2], preview[3]
+  db.actor:give_talk_message2(title, text, icon, 'iconed_answer_item')
+end`,
+
+  'raid_notebook_gui.receive_tasks_data(tbl)': `raid_notebook_gui.receive_tasks_data(tbl)
+
+local ui = raid_notebook_gui.get_ui_silent()
+if ui and ui:IsShown() then
+  ui:UpdateTaskMenu()
+end`,
+
+  'actor_on_item_use': `RegisterScriptCallback('actor_on_item_use', function(obj)
+  if not obj then return end
+
+  if obj:section() == 'itm_actor_backpack' then
+    item_backpack.actor_on_item_use(obj)
+  end
+end)`,
+
+  'npc_on_death_callback': `RegisterScriptCallback('npc_on_death_callback', function(npc, killer)
+  if not IIsHost() then return end
+  if killer and IsActor(killer) then
+    printf('[MP] NPC killed by player: %s', npc:name())
+  end
+end)`,
+
+  'monster_on_death_callback': `RegisterScriptCallback('monster_on_death_callback', function(monster, killer)
+  if not (monster and killer) then return end
+
+  if IsActor(killer) then
+    printf('[MP] Monster killed by actor: %s', monster:section())
+  end
+end)`,
+
+  'say': `-- Console:
+say Need help near campfire
+
+-- Lua wrapper:
+get_console():execute('say Need help near campfire')`,
+
+  'sync_weather_with_clients': `-- Console command from host:
+sync_weather_with_clients
+
+-- Useful after weather change logic:
+if IIsHost() then
+  get_console():execute('sync_weather_with_clients')
+end`,
+
+  'sync_time_with_clients': `-- Console command from host:
+sync_time_with_clients
+
+if IIsHost() then
+  level.change_game_time(0, 1, 0)
+  get_console():execute('sync_time_with_clients')
+end`,
+
+  'connect': `-- LAN with explicit port
+connect 127.0.0.1:44139
+
+-- LAN default port fallback
+connect 127.0.0.1`,
+
+  'mp_olmode': `-- LAN mode
+mp_olmode 0
+
+-- Online / Steam mode
+mp_olmode 1`
+};
+
+for (const section of sections) {
+  for (const method of section.methods) {
+    if (richExamples[method[0]]) {
+      method[3] = richExamples[method[0]];
+    }
+  }
+}
+
 const docs = document.getElementById('docs');
 const nav = document.getElementById('navlinks');
 const search = document.getElementById('search');
@@ -288,8 +918,11 @@ function render(filter = '') {
   const q = filter.trim().toLowerCase();
   let visible = 0;
   let total = 0;
+  const activeId = window.location.hash ? window.location.hash.slice(1) : sections[0].id;
 
-  nav.innerHTML = sections.map((section) => `<a href="#${section.id}">${section.title}</a>`).join('');
+  nav.innerHTML = sections
+    .map((section) => `<a href="#${section.id}" class="${section.id === activeId ? 'active' : ''}">${section.title}</a>`)
+    .join('');
 
   docs.innerHTML = sections.map((section) => {
     const methods = section.methods.filter(([name, source, desc]) => {
@@ -329,4 +962,5 @@ function render(filter = '') {
 }
 
 search.addEventListener('input', () => render(search.value));
+window.addEventListener('hashchange', () => render(search.value));
 render();
