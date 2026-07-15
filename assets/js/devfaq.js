@@ -243,7 +243,6 @@ const sections = [
     title: 'Консольные команды',
     intro: 'Команды из предоставленного developer FAQ.',
     methods: [
-      ['say', 'faq-data', 'Отправляет сообщение в чат из консоли.', 'say hello'],
       ['sync_weatherfx_with_clients', 'faq-data', 'Синхронизирует weather FX с клиентами.', 'sync_weatherfx_with_clients'],
       ['sync_weather_with_clients', 'faq-data', 'Синхронизирует погоду с клиентами.', 'sync_weather_with_clients'],
       ['sync_time_with_clients', 'faq-data', 'Синхронизирует время с клиентами.', 'sync_time_with_clients'],
@@ -253,7 +252,6 @@ const sections = [
       ['connect', 'faq-data', 'Подключает к серверу по адресу.', 'connect 127.0.0.1:44139'],
       ['kickplayer', 'faq-data', 'Кикает игрока по nickname.', 'kickplayer werasik2aa'],
       ['sendmoney', 'faq-data', 'Отправляет деньги игроку.', 'sendmoney werasik2aa 3500'],
-      ['mp_olmode', 'faq-data', 'Переключает LAN/Online mode.', 'mp_olmode 0\nmp_olmode 1'],
       ['mp_nickname', 'faq-data', 'Меняет текущий nickname.', 'mp_nickname werasik2aa']
     ]
   },
@@ -265,7 +263,7 @@ const sections = [
       ['steam_appid.txt / 480', 'faq-data', 'Если Steam Overlay не работает, необходимо создать steam_appid.txt с текстом "480" в корне игры/bin.', '480'],
       ['Steam Overlay connect', 'faq-data', 'Подключение к другу через Shift+Tab. Для того, чтобы подключится через стим необходим сам стим.', 'Shift+Tab -> друг -> присоедениться к игре'],
       ['Steam traffic restrictions', 'faq-data', 'Большие reliable payload нужно дробить или отправлять с задержками.', 'Chunk large CustomScriptAction payloads'],
-      ['LAN mode', 'faq-data', 'Для переключение игры в режим по локальной сети (LAN)', 'можно закрыть стим или ввести команду mp_olmode 0']
+      ['Steam friends', 'faq-data', 'Чтобы подключение работало нужно, чтобы друг был добавлен в вашем списке!', 'Chunk large CustomScriptAction payloads'],
     ]
   }
 ];
